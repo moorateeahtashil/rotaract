@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Rotary/Rotaract Brand Colors */
+  --color-rotary-blue: #17458f;
+  --color-rotary-gold: #f7a81b;
+  --color-azure: #0067c8;
+  --color-sky-blue: #00a2e0;
+  --color-cranberry: #d41367;
+  --color-turquoise: #00adbb;
+  --color-white: #ffffff;
+  --color-charcoal: #54565a;
+  --color-pewter: #898a8d;
+  --color-smoke: #b1b1b1;
+  --color-silver: #d0cfcd;
+  --color-stone: #9ba4b0;
+  --color-cloud: #d6d1ca;
+  --color-black: #000000;
+
+  /* Semantic color tokens */
+  --color-background: #ffffff;
+  --color-foreground: #54565a;
+  --color-card: #ffffff;
+  --color-card-foreground: #54565a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #54565a;
+  --color-primary: #17458f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f7a81b;
+  --color-secondary-foreground: #000000;
+  --color-muted: #d6d1ca;
+  --color-muted-foreground: #898a8d;
+  --color-accent: #00a2e0;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #d41367;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #d0cfcd;
+  --color-input: #d0cfcd;
+  --color-ring: #17458f;
+
+  /* Chart colors */
+  --color-chart-1: #17458f;
+  --color-chart-2: #0067c8;
+  --color-chart-3: #00a2e0;
+  --color-chart-4: #f7a81b;
+  --color-chart-5: #d41367;
+
+  /* Typography */
+  --font-sans: var(--font-open-sans);
+  --font-heading: var(--font-open-sans);
+  --font-body: var(--font-open-sans);
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Spacing */
+  --spacing-header: 4.5rem;
+  --spacing-container: 1.5rem;
+}
+
+/* Base styles */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  nav,
+  button,
+  label,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-heading);
+  }
+}
