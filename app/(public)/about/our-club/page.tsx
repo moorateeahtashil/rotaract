@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function AboutOurClubPage() {
   const settings = await getSiteSettings();
-  const getSetting = (key: string) => settings.find((s: any) => s.key === key)?.value || "";
+  const getSetting = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
 
   const clubName = getSetting("club_name") || "Rotaract Club";
   const clubTagline = getSetting("club_tagline") || "Service Above Self";

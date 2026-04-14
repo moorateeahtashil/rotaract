@@ -7,9 +7,9 @@ export const metadata = { title: "My Profile" };
 
 export default async function ProfilePage() {
   const guard = await requireMember();
-  if ("redirectTo" in guard) return redirect(guard.redirectTo);
+  if ("redirectTo" in guard) return redirect(guard.redirectTo as string);
 
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
 
   const [
     { data: profile },

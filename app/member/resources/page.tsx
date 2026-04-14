@@ -11,9 +11,9 @@ export const metadata = { title: "Resources" };
 
 export default async function MemberResourcesPage() {
   const guard = await requireMember();
-  if ("redirectTo" in guard) return redirect(guard.redirectTo);
+  if ("redirectTo" in guard) return redirect(guard.redirectTo as string);
 
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
 
   const { data: resources } = await supabase
     .from("resources")

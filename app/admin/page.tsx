@@ -13,7 +13,7 @@ import {
 
 export default async function AdminDashboardPage() {
   const guard = await requireAdmin();
-  if ("redirectTo" in guard) return redirect(guard.redirectTo);
+  if ("redirectTo" in guard) return redirect(guard.redirectTo as string);
 
   const supabase = await createServerClient();
 

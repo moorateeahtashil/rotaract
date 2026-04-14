@@ -17,11 +17,11 @@ export async function getSiteSettings() {
     .from("site_settings")
     .select("*")
     .order("group_key");
-  return data ?? [];
+  return (data ?? []) as Tables["site_settings"]["Row"][];
 }
 
 export async function getSiteSettingByKey(key: string) {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const { data } = await supabase
     .from("site_settings")
     .select("value")
@@ -43,12 +43,12 @@ export async function getNavigationItems(menuKey = "main") {
     .eq("is_visible", true)
     .is("parent_id", null)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getNavigationWithChildren(menuKey = "main") {
   const items = await getNavigationItems(menuKey);
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const { data: children } = await supabase
     .from("navigation_items")
     .select("*")
@@ -59,7 +59,7 @@ export async function getNavigationWithChildren(menuKey = "main") {
 
   return items.map((item) => ({
     ...item,
-    children: children?.filter((c) => c.parent_id === item.id) ?? [],
+    children: (children as any[])?.filter((c) => c.parent_id === item.id) ?? [],
   }));
 }
 
@@ -75,7 +75,7 @@ export async function getHomepageSections() {
     .eq("is_visible", true)
     .eq("is_enabled", true)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -90,7 +90,7 @@ export async function getAvenues() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getAvenueBySlug(slug: string) {
@@ -102,7 +102,7 @@ export async function getAvenueBySlug(slug: string) {
     .eq("is_active", true)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as Tables["avenues"]["Row"] | null;
 }
 
 // ============================================================
@@ -147,7 +147,7 @@ export async function getProjects({
   if (limit) query = query.range(offset, offset + limit - 1);
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getProjectBySlug(slug: string) {
@@ -170,7 +170,7 @@ export async function getProjectBySlug(slug: string) {
     .eq("is_published", true)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as any;
 }
 
 export async function getFeaturedProjects(limit = 3) {
@@ -231,7 +231,7 @@ export async function getEvents({
   if (limit) query = query.range(offset, offset + limit - 1);
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getEventBySlug(slug: string) {
@@ -248,7 +248,7 @@ export async function getEventBySlug(slug: string) {
     .eq("slug", slug)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as any;
 }
 
 export async function getUpcomingEvents(limit = 6) {
@@ -296,7 +296,7 @@ export async function getBoardMembers({
   }
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getBoardPositions() {
@@ -306,7 +306,7 @@ export async function getBoardPositions() {
     .select("*")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -341,7 +341,7 @@ export async function getMembers({
   if (limit) query = query.range(offset, offset + limit - 1);
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getMemberCount() {
@@ -397,7 +397,7 @@ export async function getPosts({
   if (limit) query = query.range(offset, offset + limit - 1);
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getPostBySlug(slug: string) {
@@ -416,7 +416,7 @@ export async function getPostBySlug(slug: string) {
     .eq("is_published", true)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as any;
 }
 
 export async function getPostCategories() {
@@ -426,7 +426,7 @@ export async function getPostCategories() {
     .select("*")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -443,7 +443,7 @@ export async function getPageBySlug(slug: string) {
     .eq("is_public", true)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as any;
 }
 
 export async function getPageBlocks(pageId: string) {
@@ -454,7 +454,7 @@ export async function getPageBlocks(pageId: string) {
     .eq("page_id", pageId)
     .eq("is_visible", true)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -469,7 +469,7 @@ export async function getSponsorClub() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("name", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -490,7 +490,7 @@ export async function getCommittees() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -505,7 +505,7 @@ export async function getAlbums() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getAlbumById(albumId: string) {
@@ -524,7 +524,7 @@ export async function getAlbumById(albumId: string) {
     .eq("is_active", true)
     .is("deleted_at", null)
     .single();
-  return data;
+  return data as any;
 }
 
 export async function getMediaFiles({
@@ -543,7 +543,7 @@ export async function getMediaFiles({
   if (limit) query = query.limit(limit);
 
   const { data } = await query;
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================
@@ -558,7 +558,7 @@ export async function getBookingTypes() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 export async function getBookingSlots(bookingTypeId: string) {
@@ -569,7 +569,7 @@ export async function getBookingSlots(bookingTypeId: string) {
     .eq("booking_type_id", bookingTypeId)
     .eq("is_available", true)
     .order("start_time", { ascending: true });
-  return data ?? [];
+  return (data ?? []) as any[];
 }
 
 // ============================================================

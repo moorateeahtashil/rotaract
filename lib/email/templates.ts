@@ -3,7 +3,7 @@
 // ============================================================
 
 import { Resend } from "resend";
-import { createServiceClient } from "@/lib/db/client";
+import { createServiceRoleClient } from "@/lib/db/server";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -21,7 +21,7 @@ interface TemplateVars {
 }
 
 export async function getEmailTemplate(key: string) {
-  const supabase = createServiceClient();
+  const supabase = await createServiceRoleClient() as any;
   const { data } = await supabase
     .from("email_templates")
     .select("*")
@@ -64,7 +64,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailO
       subject,
       html,
       text: text || stripHtml(html),
-      reply_to: replyTo,
+      replyTo,
     });
 
     if (error) {
@@ -192,7 +192,7 @@ async function logEmail(
   externalId: string | null,
   status: string
 ) {
-  const supabase = createServiceClient();
+  const supabase = await createServiceRoleClient() as any;
   await supabase.from("email_logs").insert({
     to_email: to,
     subject,
@@ -210,7 +210,7 @@ export async function logReminder(
   recipientEmail: string,
   status: string
 ) {
-  const supabase = createServiceClient();
+  const supabase = await createServiceRoleClient() as any;
   await supabase.from("reminder_logs").insert({
     reminder_rule_id: ruleId,
     entity_type: entityType,

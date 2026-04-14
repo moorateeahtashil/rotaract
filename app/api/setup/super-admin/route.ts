@@ -8,7 +8,7 @@ import { createServiceRoleClient } from "@/lib/db/server";
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createServiceRoleClient() as any;
     const { email } = await req.json();
 
     if (!email) {

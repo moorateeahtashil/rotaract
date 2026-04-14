@@ -20,7 +20,7 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
 };
 
 export async function getSession() {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -28,7 +28,7 @@ export async function getSession() {
 }
 
 export async function getCurrentUser() {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -46,7 +46,7 @@ export async function getCurrentUser() {
 }
 
 export async function getCurrentMember() {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const session = await getSession();
   if (!session) return null;
 
@@ -66,14 +66,14 @@ export async function getCurrentMember() {
 }
 
 export async function getUserRoles(userId: string): Promise<UserRole[]> {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const { data: roles } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
     .eq("is_active", true);
 
-  return roles?.map((r) => r.role) ?? [];
+  return roles?.map((r: any) => r.role) ?? [];
 }
 
 export async function getHighestRole(roles: UserRole[]): Promise<UserRole> {

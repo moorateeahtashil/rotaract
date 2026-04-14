@@ -84,17 +84,17 @@ export default function AdminContentPage() {
   async function loadContent() {
     const supabase = createClient();
 
-    const { data: pages } = await supabase
+    const { data: pages } = await (supabase as any)
       .from("pages")
       .select("*, page_blocks(*)")
       .in("slug", ["terms-of-use", "privacy-policy"]);
 
     if (pages) {
-      const termsPage = pages.find((p: any) => p.slug === "terms-of-use");
-      const privacyPage = pages.find((p: any) => p.slug === "privacy-policy");
+      const termsPage = (pages as any[]).find((p: any) => p.slug === "terms-of-use");
+      const privacyPage = (pages as any[]).find((p: any) => p.slug === "privacy-policy");
 
       if (termsPage) {
-        const block = termsPage.page_blocks?.find((b: any) => b.block_type === "text");
+        const block = (termsPage as any).page_blocks?.find((b: any) => b.block_type === "text");
         setTermsContent({
           id: termsPage.id,
           title: termsPage.title,
@@ -103,7 +103,7 @@ export default function AdminContentPage() {
         });
       }
       if (privacyPage) {
-        const block = privacyPage.page_blocks?.find((b: any) => b.block_type === "text");
+        const block = (privacyPage as any).page_blocks?.find((b: any) => b.block_type === "text");
         setPrivacyContent({
           id: privacyPage.id,
           title: privacyPage.title,
@@ -123,7 +123,7 @@ export default function AdminContentPage() {
 
       if (!pageId) {
         // Create the page
-        const { data: newPage, error: pageError } = await supabase
+        const { data: newPage, error: pageError } = await (supabase as any)
           .from("pages")
           .insert({
             title: pageData.title,
@@ -138,14 +138,14 @@ export default function AdminContentPage() {
         pageId = newPage.id;
       } else {
         // Update the page
-        await supabase
+        await (supabase as any)
           .from("pages")
           .update({ title: pageData.title, updated_at: new Date().toISOString() })
           .eq("id", pageId);
       }
 
       // Upsert the text block
-      const { data: existingBlock } = await supabase
+      const { data: existingBlock } = await (supabase as any)
         .from("page_blocks")
         .select("id")
         .eq("page_id", pageId)
@@ -153,12 +153,12 @@ export default function AdminContentPage() {
         .single();
 
       if (existingBlock) {
-        await supabase
+        await (supabase as any)
           .from("page_blocks")
           .update({ content: pageData.content })
           .eq("id", existingBlock.id);
       } else {
-        await supabase
+        await (supabase as any)
           .from("page_blocks")
           .insert({
             page_id: pageId,

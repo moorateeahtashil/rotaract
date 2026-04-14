@@ -2,7 +2,7 @@
 // REMINDER CRON JOB — Runs every hour via Vercel Cron
 // ============================================================
 
-import { createServiceClient } from "@/lib/db/client";
+import { createServiceRoleClient } from "@/lib/db/server";
 import { sendTemplateEmail, logReminder } from "@/lib/email/templates";
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const supabase = createServiceClient();
+  const supabase = createServiceRoleClient() as any;
   let processed = 0;
   let errors = 0;
 

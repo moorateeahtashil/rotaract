@@ -64,7 +64,7 @@ export default function AdminMembersPage() {
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
 
     const { data: profiles } = await supabase
       .from("profiles")
@@ -119,7 +119,7 @@ export default function AdminMembersPage() {
   async function assignRole() {
     if (!selectedUser) return;
     setSaving(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     try {
       const { error } = await supabase.from("user_roles").upsert(
         { user_id: selectedUser.user_id, role: newRole, is_active: true },
@@ -138,7 +138,7 @@ export default function AdminMembersPage() {
 
   async function approveApplicant(user: UserRecord) {
     setSaving(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     try {
       // Upgrade role to member
       await supabase
@@ -185,7 +185,7 @@ export default function AdminMembersPage() {
 
   async function createMember() {
     setSaving(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     try {
       // We use the admin API endpoint to invite user
       const res = await fetch("/api/admin/users/invite", {

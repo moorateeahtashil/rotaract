@@ -67,7 +67,7 @@ export function ProfileForm({ profile, member, roles }: { profile: Profile; memb
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     try {
       const { error: profileError } = await supabase
         .from("profiles")

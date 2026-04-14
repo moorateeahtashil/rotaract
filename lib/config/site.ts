@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/db/server";
 export type SiteConfig = Record<string, string>;
 
 export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
 
   const { data: settings } = await supabase
     .from("site_settings")
@@ -12,7 +12,7 @@ export const getSiteConfig = cache(async (): Promise<SiteConfig> => {
     .eq("is_public", true);
 
   const config: SiteConfig = {};
-  settings?.forEach((s) => {
+  settings?.forEach((s: any) => {
     config[s.key] = s.value;
   });
 

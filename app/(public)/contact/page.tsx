@@ -1,6 +1,6 @@
 import { getSiteSettings } from "@/lib/db/queries";
 import { ContactForm } from "@/components/contact/contact-form";
-import { Mail, Phone, MapPin, Clock, Tabs } from "lucide-react";
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function ContactPage() {
   const settings = await getSiteSettings();
-  const getSetting = (key: string) => settings.find((s) => s.key === key)?.value || "";
+  const getSetting = (key: string) => (settings as any[]).find((s) => s.key === key)?.value || "";
 
   const contactEmail = getSetting("contact_email") || "contact@rotaract.org";
   const contactPhone = getSetting("contact_phone") || "";

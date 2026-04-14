@@ -12,10 +12,11 @@ export const metadata = {
   description: "Stay updated with our upcoming events, meetings, and service activities.",
 };
 
-async function EventsContent({ searchParams }: { searchParams: { tab?: string; type?: string } }) {
-  const tab = searchParams.tab || "upcoming";
+async function EventsContent({ searchParams }: { searchParams: Promise<{ tab?: string; type?: string }> }) {
+  const resolvedParams = await searchParams;
+  const tab = resolvedParams.tab || "upcoming";
   const upcoming = tab === "upcoming";
-  const events = await getEvents({ upcoming, eventType: searchParams.type || undefined });
+  const events = await getEvents({ upcoming, eventType: resolvedParams.type || undefined });
   const avenues = await getAvenues();
 
   if (events.length === 0) {
@@ -120,7 +121,7 @@ async function EventsContent({ searchParams }: { searchParams: { tab?: string; t
   );
 }
 
-export default function EventsPage({ searchParams }: { searchParams: { tab?: string; type?: string } }) {
+export default function EventsPage({ searchParams }: { searchParams: Promise<{ tab?: string; type?: string }> }) {
   return (
     <div>
       {/* Hero */}

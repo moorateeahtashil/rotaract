@@ -43,7 +43,7 @@ export default function EventTypesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     const { data } = await supabase
       .from("event_types")
       .select("*")
@@ -69,7 +69,7 @@ export default function EventTypesPage() {
 
   async function save() {
     setSaving(true);
-    const supabase = createClient();
+    const supabase = createClient() as any;
     try {
       if (editing) {
         const { error } = await supabase
@@ -99,13 +99,13 @@ export default function EventTypesPage() {
   }
 
   async function toggleActive(type: EventType) {
-    const supabase = createClient();
+    const supabase = createClient() as any;
     await supabase.from("event_types").update({ is_active: !type.is_active }).eq("id", type.id);
     await load();
   }
 
   async function deleteType(type: EventType) {
-    const supabase = createClient();
+    const supabase = createClient() as any;
     await supabase
       .from("event_types")
       .update({ deleted_at: new Date().toISOString(), is_active: false })

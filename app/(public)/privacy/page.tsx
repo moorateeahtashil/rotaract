@@ -102,10 +102,10 @@ export default async function PrivacyPage() {
     .eq("is_published", true)
     .single();
 
-  const contentBlock = page?.page_blocks?.find((b: any) => b.block_type === "text");
+  const contentBlock = (page as any)?.page_blocks?.find((b: any) => b.block_type === "text");
   const content = contentBlock?.content || DEFAULT_PRIVACY;
-  const lastUpdated = page?.updated_at
-    ? new Date(page.updated_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+  const lastUpdated = (page as any)?.updated_at
+    ? new Date((page as any).updated_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
     : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const sections = content

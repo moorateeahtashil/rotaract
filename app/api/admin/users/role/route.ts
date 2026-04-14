@@ -16,7 +16,7 @@ const ADMIN_ROLES = [
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerClient();
+    const supabase = await createServerClient() as any;
     const cookieStore = cookies();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createServerClient();
+    const supabase = await createServerClient() as any;
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
 
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
 
     // Get roles for each user
     const usersWithRoles = await Promise.all(
-      profiles.map(async (profile) => {
+      profiles.map(async (profile: any) => {
         const { data: roles } = await supabase
           .from("user_roles")
           .select("role, is_active")
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
           user_id: profile.user_id,
           name: `${profile.first_name} ${profile.last_name}`,
           email: profile.email,
-          roles: roles?.map(r => r.role) || [],
+          roles: roles?.map((r: any) => r.role) || [],
           highestRole: roles?.[0]?.role || "public",
         };
       })

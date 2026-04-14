@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Use service role to bypass RLS
-    const adminSupabase = createServiceRoleClient();
+    const adminSupabase = createServiceRoleClient() as any;
 
     // Verify event exists
     const { data: event, error: eventError } = await adminSupabase
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         qr_data: token,
         expires_at: expiresAt,
         is_active: true,
-        created_by: profile?.id,
+        created_by: (profile as any)?.id,
       })
       .select()
       .single();

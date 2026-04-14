@@ -12,9 +12,10 @@ export const metadata = {
   description: "Explore the impactful projects our Rotaract club has undertaken to serve the community.",
 };
 
-async function ProjectsGrid({ searchParams }: { searchParams: { status?: string; avenue?: string } }) {
-  const status = searchParams.status;
-  const avenueId = searchParams.avenue;
+async function ProjectsGrid({ searchParams }: { searchParams: Promise<{ status?: string; avenue?: string }> }) {
+  const resolvedParams = await searchParams;
+  const status = resolvedParams.status;
+  const avenueId = resolvedParams.avenue;
   const projects = await getProjects({ status, avenueId });
   const avenues = await getAvenues();
 
@@ -128,7 +129,7 @@ async function ProjectsGrid({ searchParams }: { searchParams: { status?: string;
   );
 }
 
-export default function ProjectsPage({ searchParams }: { searchParams: { status?: string; avenue?: string } }) {
+export default function ProjectsPage({ searchParams }: { searchParams: Promise<{ status?: string; avenue?: string }> }) {
   return (
     <div>
       {/* Hero */}

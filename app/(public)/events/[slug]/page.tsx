@@ -17,8 +17,9 @@ import {
 import { formatDate, formatDateTime } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const event = await getEventBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const event = await getEventBySlug(slug);
   if (!event) return { title: "Event Not Found" };
 
   return {
@@ -32,8 +33,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function EventDetailPage({ params }: { params: { slug: string } }) {
-  const event = await getEventBySlug(params.slug);
+export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const event = await getEventBySlug(slug);
   if (!event) notFound();
 
   const related = await getUpcomingEvents(3);

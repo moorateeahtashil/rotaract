@@ -6,7 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createServiceClient } from "@/lib/db/client";
+import { createServiceRoleClient } from "@/lib/db/server";
 import { requireAuth, requireAdmin } from "@/lib/auth/guards";
 import { slugify } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ export async function submitContactInquiry(data: {
   inquiry_type?: string;
 }) {
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const { error } = await supabase.from("contact_inquiries").insert({
       first_name: data.first_name,
@@ -70,7 +70,7 @@ export async function submitMembershipApplication(data: {
   social_links?: Record<string, string>;
 }) {
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const { error } = await supabase.from("membership_applications").insert({
       first_name: data.first_name,
@@ -111,7 +111,7 @@ export async function registerForEvent(eventId: string, memberId: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const { error } = await supabase.from("event_registrations").insert({
       event_id: eventId,
@@ -149,7 +149,7 @@ export async function createBooking(data: {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const { error } = await supabase.from("bookings").insert({
       booking_type_id: data.booking_type_id,
@@ -183,7 +183,7 @@ export async function createProject(formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { userId } = guard;
 
     const title = formData.get("title") as string;
@@ -236,7 +236,7 @@ export async function updateProject(id: string, formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const title = formData.get("title") as string;
     const slug = formData.get("slug") as string || slugify(title);
@@ -285,7 +285,7 @@ export async function deleteProject(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("projects")
       .update({ deleted_at: new Date().toISOString(), deleted_by: guard.userId })
@@ -310,7 +310,7 @@ export async function createEvent(formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { userId } = guard;
 
     const title = formData.get("title") as string;
@@ -368,7 +368,7 @@ export async function updateEvent(id: string, formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const title = formData.get("title") as string;
     const slug = formData.get("slug") as string || slugify(title);
     const date = formData.get("date") as string;
@@ -418,7 +418,7 @@ export async function deleteEvent(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("events")
       .update({ deleted_at: new Date().toISOString(), deleted_by: guard.userId })
@@ -443,7 +443,7 @@ export async function createPost(formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { userId } = guard;
 
     const title = formData.get("title") as string;
@@ -486,7 +486,7 @@ export async function updatePost(id: string, formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const title = formData.get("title") as string;
     const slug = formData.get("slug") as string || slugify(title);
     const publishedAt = formData.get("published_at") as string;
@@ -525,7 +525,7 @@ export async function deletePost(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("posts")
       .update({ deleted_at: new Date().toISOString(), deleted_by: guard.userId })
@@ -550,7 +550,7 @@ export async function updateSiteSettings(settings: Record<string, string>) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const updates = Object.entries(settings).map(([key, value]) => ({
       key,
@@ -594,7 +594,7 @@ export async function updateHomepageSection(id: string, data: {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("homepage_sections")
       .update(data)
@@ -629,7 +629,7 @@ export async function updateNavigation(id: string, data: {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("navigation_items")
       .update(data)
@@ -658,7 +658,7 @@ export async function createNavigation(data: {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase.from("navigation_items").insert({
       menu_key: data.menu_key,
       label: data.label,
@@ -684,7 +684,7 @@ export async function deleteNavigation(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("navigation_items")
       .delete()
@@ -709,7 +709,7 @@ export async function createBoardMember(formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
 
     const termStart = formData.get("term_start") as string;
 
@@ -743,7 +743,7 @@ export async function deleteBoardMember(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("board_members")
       .update({ deleted_at: new Date().toISOString() })
@@ -768,7 +768,7 @@ export async function createAvenue(formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const name = formData.get("name") as string;
     const slug = formData.get("slug") as string || slugify(name);
 
@@ -803,7 +803,7 @@ export async function updateAvenue(id: string, formData: FormData) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const name = formData.get("name") as string;
     const slug = formData.get("slug") as string || slugify(name);
 
@@ -837,7 +837,7 @@ export async function deleteAvenue(id: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("avenues")
       .update({ deleted_at: new Date().toISOString(), deleted_by: guard.userId })
@@ -862,7 +862,7 @@ export async function updateInquiryStatus(id: string, status: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("contact_inquiries")
       .update({ status })
@@ -886,7 +886,7 @@ export async function updateApplicationStatus(id: string, status: string) {
   if ("redirect" in guard) return guard;
 
   try {
-    const supabase = createServiceClient();
+    const supabase = createServiceRoleClient() as any;
     const { error } = await supabase
       .from("membership_applications")
       .update({ status })

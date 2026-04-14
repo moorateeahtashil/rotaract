@@ -12,7 +12,7 @@ export default async function PendingPage() {
   const session = await getSession();
   if (!session) return redirect("/login");
 
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
 
   const { data: profile } = await supabase
     .from("profiles")

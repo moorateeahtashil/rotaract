@@ -9,8 +9,9 @@ import { ArrowLeft, ArrowRight, FolderKanban, Calendar } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const avenue = await getAvenueBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const avenue = await getAvenueBySlug(slug);
   if (!avenue) return { title: "Avenue Not Found" };
   return {
     title: avenue.name,
@@ -18,8 +19,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function AvenueDetailPage({ params }: { params: { slug: string } }) {
-  const avenue = await getAvenueBySlug(params.slug);
+export default async function AvenueDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const avenue = await getAvenueBySlug(slug);
   if (!avenue) notFound();
 
   const [projects, events, allAvenues] = await Promise.all([

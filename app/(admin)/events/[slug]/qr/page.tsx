@@ -6,19 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, QrCode, Copy, Download, RefreshCw, Check } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminQRCodePage({ params }: { params: { slug: string } }) {
+export default function AdminQRCodePage({ params }: { params: Promise<{ slug: string }> }) {
+  const [resolvedParams, setResolvedParams] = useState<{ slug: string } | null>(null);
   const [qrCode, setQrCode] = useState<{ token: string; qr_data: string; id: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expiryHours, setExpiryHours] = useState(24);
 
+  // Resolve params once
+  useState(() => {
+    params.then(p => setResolvedParams(p));
+  });
+
+  const eventSlug = resolvedParams?.slug || "";
+
   const generateQR = async () => {
+    if (!eventSlug) return;
     setLoading(true);
     try {
       const response = await fetch("/api/admin/qr/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventSlug: params.slug, expiryHours }),
+        body: JSON.stringify({ eventSlug, expiryHours }),
       });
 
       const data = await response.json();

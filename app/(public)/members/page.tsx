@@ -12,8 +12,9 @@ export const metadata = {
   description: "Meet the passionate members of our Rotaract club who drive change in the community.",
 };
 
-async function MembersGrid({ searchParams }: { searchParams: { q?: string } }) {
-  const search = searchParams.q;
+async function MembersGrid({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const resolvedParams = await searchParams;
+  const search = resolvedParams.q;
   const members = await getMembers({ status: "active", showInDirectory: true, limit: 50 });
 
   const filtered = search
@@ -89,7 +90,7 @@ async function MembersGrid({ searchParams }: { searchParams: { q?: string } }) {
   );
 }
 
-export default function MembersPage({ searchParams }: { searchParams: { q?: string } }) {
+export default function MembersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   return (
     <div>
       {/* Hero */}

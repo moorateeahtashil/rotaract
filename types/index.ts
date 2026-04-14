@@ -1,3 +1,5 @@
+import type { Database } from "@/lib/db/types";
+
 export type UserRole = Database["public"]["Enums"]["user_role_type"];
 export type MemberStatus = Database["public"]["Enums"]["member_status"];
 export type ProjectStatus = Database["public"]["Enums"]["project_status"];
@@ -11,8 +13,6 @@ export type MediaType = Database["public"]["Enums"]["media_type"];
 export type PageBlockType = Database["public"]["Enums"]["page_block_type"];
 export type EmailSendStatus = Database["public"]["Enums"]["email_send_status"];
 export type AuditAction = Database["public"]["Enums"]["audit_action"];
-
-import type { Database } from "./db/types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type UserRoles = Database["public"]["Tables"]["user_roles"]["Row"];

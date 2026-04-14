@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Use service role client to bypass RLS for admin operations
-    const adminSupabase = createServiceRoleClient();
+    const adminSupabase = createServiceRoleClient() as any;
 
     // Invite user via Supabase Auth
     const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(

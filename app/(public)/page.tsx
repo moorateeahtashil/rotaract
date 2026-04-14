@@ -495,7 +495,7 @@ function CTASection({ section }: { section: any }) {
 // ─── MEETING INFO ───
 async function MeetingInfoSection({ section }: { section: any }) {
   const settings = await getSiteSettings();
-  const getSetting = (key: string) => settings.find((s: any) => s.key === key)?.value || "";
+  const getSetting = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
   const meetingDay = getSetting("meeting_day") || "Every other Monday";
   const meetingTime = getSetting("meeting_time") || "7:00 PM";
   const meetingLocation = getSetting("meeting_location") || "TBD";
@@ -551,7 +551,7 @@ async function MeetingInfoSection({ section }: { section: any }) {
 export default async function HomePage() {
   const sections = await getHomepageSections();
   const settings = await getSiteSettings();
-  const logoUrl = settings.find((s: any) => s.key === "logo_url")?.value || "";
+  const logoUrl = (settings as any[]).find((s: any) => s.key === "logo_url")?.value || "";
 
   // If no sections exist in DB, show default layout
   if (sections.length === 0) {

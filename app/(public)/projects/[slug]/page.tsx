@@ -8,8 +8,9 @@ import { MapPin, Calendar, Users, ArrowLeft, ArrowRight, FolderKanban } from "lu
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const project = await getProjectBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project Not Found" };
 
   return {
@@ -23,8 +24,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProjectDetailPage({ params }: { params: { slug: string } }) {
-  const project = await getProjectBySlug(params.slug);
+export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
   const related = await getFeaturedProjects(3);
