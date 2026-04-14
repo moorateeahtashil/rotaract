@@ -1960,14 +1960,16 @@ export type Database = {
       user_role_type:
         | "super_admin"
         | "admin"
+        | "normal"
+        | "board_member"
+        | "member"
+        | "prospective_member"
         | "president"
         | "secretary"
         | "public_image_director"
         | "membership_director"
         | "project_director"
         | "event_manager"
-        | "board_member"
-        | "member"
         | "applicant"
         | "public";
       member_status: "active" | "inactive" | "suspended" | "alumni" | "pending";

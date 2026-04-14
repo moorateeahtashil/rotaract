@@ -33,29 +33,27 @@ import { cn } from "@/lib/utils";
 
 type UserRole = string;
 
-const ROLE_HIERARCHY: Record<string, number> = {
-  super_admin: 0, admin: 1, president: 2, secretary: 3,
-  public_image_director: 4, membership_director: 5,
-  project_director: 6, event_manager: 7, board_member: 8,
-  member: 9, applicant: 10, public: 11,
+const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+  super_admin:        { label: "Super Admin",        color: "bg-red-100 text-red-700" },
+  admin:              { label: "Admin",              color: "bg-orange-100 text-orange-700" },
+  board_member:       { label: "Board Member",       color: "bg-blue-100 text-blue-700" },
+  member:             { label: "Member",             color: "bg-green-100 text-green-700" },
+  prospective_member: { label: "Prospective Member", color: "bg-yellow-100 text-yellow-700" },
+  normal:             { label: "Member",             color: "bg-gray-100 text-gray-700" },
+  // Legacy
+  president:             { label: "President",          color: "bg-blue-100 text-blue-700" },
+  secretary:             { label: "Secretary",          color: "bg-blue-100 text-blue-700" },
+  event_manager:         { label: "Event Manager",      color: "bg-teal-100 text-teal-700" },
+  membership_director:   { label: "Membership Director",color: "bg-purple-100 text-purple-700" },
+  project_director:      { label: "Project Director",   color: "bg-purple-100 text-purple-700" },
+  public_image_director: { label: "PI Director",        color: "bg-purple-100 text-purple-700" },
+  applicant:             { label: "Applicant",          color: "bg-yellow-100 text-yellow-700" },
 };
 
-const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-  super_admin: { label: "Super Admin", color: "bg-red-100 text-red-700" },
-  admin: { label: "Admin", color: "bg-orange-100 text-orange-700" },
-  president: { label: "President", color: "bg-blue-100 text-blue-700" },
-  secretary: { label: "Secretary", color: "bg-blue-100 text-blue-700" },
-  board_member: { label: "Board Member", color: "bg-green-100 text-green-700" },
-  event_manager: { label: "Event Manager", color: "bg-teal-100 text-teal-700" },
-  membership_director: { label: "Membership Director", color: "bg-purple-100 text-purple-700" },
-  project_director: { label: "Project Director", color: "bg-purple-100 text-purple-700" },
-  public_image_director: { label: "PI Director", color: "bg-purple-100 text-purple-700" },
-  member: { label: "Member", color: "bg-gray-100 text-gray-700" },
-  applicant: { label: "Applicant", color: "bg-yellow-100 text-yellow-700" },
-};
+const DASHBOARD_ROLES = ["super_admin", "admin"];
 
 function isAdminRole(role: string) {
-  return ROLE_HIERARCHY[role] <= ROLE_HIERARCHY["board_member"];
+  return DASHBOARD_ROLES.includes(role);
 }
 
 export function MemberShell({

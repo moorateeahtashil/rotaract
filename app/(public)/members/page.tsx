@@ -103,6 +103,26 @@ export default function MembersPage({ searchParams }: { searchParams: Promise<{ 
         </div>
       </section>
 
+      {/* Section nav */}
+      <div className="border-b border-border bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-6">
+            <Link
+              href="/members"
+              className="py-4 text-sm font-medium text-rotary-blue border-b-2 border-rotary-blue"
+            >
+              All Members
+            </Link>
+            <Link
+              href="/leadership"
+              className="py-4 text-sm font-medium text-pewter hover:text-charcoal transition-colors"
+            >
+              Board Members
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Content */}
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

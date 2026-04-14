@@ -85,15 +85,25 @@ export default async function TermsPage() {
     ? new Date((page as any).updated_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
     : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
-  // Parse sections for sidebar TOC
-  const sections = content
-    .split("\n")
-    .filter((line: string) => line.startsWith("## "))
-    .map((line: string) => {
-      const title = line.replace("## ", "");
-      const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      return { title, id };
-    });
+  // Check if content is HTML (from rich text editor) or legacy markdown
+  const isHtml = content.trimStart().startsWith("<");
+
+  // Parse sections for sidebar TOC — support both HTML h2 tags and markdown ##
+  const sections = isHtml
+    ? Array.from(content.matchAll(/<h2[^>]*>(.*?)<\/h2>/gi)).map((m) => {
+        const match = m as RegExpMatchArray;
+        const title = (match[1] as string).replace(/<[^>]+>/g, "");
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        return { title, id };
+      })
+    : content
+        .split("\n")
+        .filter((line: string) => line.startsWith("## "))
+        .map((line: string) => {
+          const title = line.replace("## ", "");
+          const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+          return { title, id };
+        });
 
   return (
     <div>
@@ -143,7 +153,7 @@ export default async function TermsPage() {
             {/* Content */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-2xl border border-border p-8 sm:p-10">
-                <TermsContent content={content} />
+                <TermsContent content={content} isHtml={isHtml} />
               </div>
 
               {/* Mobile related links */}
@@ -163,9 +173,18 @@ export default async function TermsPage() {
   );
 }
 
-function TermsContent({ content }: { content: string }) {
-  const lines = content.split("\n");
+function TermsContent({ content, isHtml }: { content: string; isHtml: boolean }) {
+  if (isHtml) {
+    return (
+      <div
+        className="prose prose-headings:text-charcoal prose-p:text-pewter prose-li:text-pewter prose-a:text-rotary-blue prose-strong:text-charcoal max-w-none"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
 
+  // Legacy markdown renderer
+  const lines = content.split("\n");
   return (
     <div className="prose-rotary">
       {lines.map((line: string, i: number) => {
@@ -181,38 +200,15 @@ function TermsContent({ content }: { content: string }) {
         if (line.startsWith("- ")) {
           return (
             <li key={i} className="text-pewter leading-relaxed ml-4 list-disc">
-              <FormattedText text={line.replace("- ", "")} />
+              {line.replace("- ", "")}
             </li>
           );
         }
         if (line.trim() === "") {
           return <div key={i} className="h-2" />;
         }
-        return (
-          <p key={i} className="text-pewter leading-relaxed">
-            <FormattedText text={line} />
-          </p>
-        );
+        return <p key={i} className="text-pewter leading-relaxed">{line}</p>;
       })}
     </div>
-  );
-}
-
-function FormattedText({ text }: { text: string }) {
-  // Handle **bold** and [link](href) patterns
-  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
-          return <strong key={i} className="font-semibold text-charcoal">{part.slice(2, -2)}</strong>;
-        }
-        const linkMatch = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
-        if (linkMatch) {
-          return <Link key={i} href={linkMatch[2]} className="text-rotary-blue hover:underline">{linkMatch[1]}</Link>;
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </>
   );
 }

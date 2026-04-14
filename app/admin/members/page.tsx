@@ -14,18 +14,32 @@ import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, XCircle, Ref
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/db/browser-client";
 
-const ALL_ROLES = [
+// ── System Roles (Dashboard Access) ──
+const SYSTEM_ROLES = [
   { value: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-700 border-red-200" },
-  { value: "admin", label: "Admin", color: "bg-orange-100 text-orange-700 border-orange-200" },
-  { value: "president", label: "President", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "secretary", label: "Secretary", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "public_image_director", label: "PI Director", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "membership_director", label: "Membership Director", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "project_director", label: "Project Director", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "event_manager", label: "Event Manager", color: "bg-teal-100 text-teal-700 border-teal-200" },
-  { value: "board_member", label: "Board Member", color: "bg-green-100 text-green-700 border-green-200" },
-  { value: "member", label: "Member", color: "bg-gray-100 text-gray-700 border-gray-200" },
-  { value: "applicant", label: "Applicant", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  { value: "admin",       label: "Admin",       color: "bg-orange-100 text-orange-700 border-orange-200" },
+  { value: "normal",      label: "Normal",      color: "bg-gray-100 text-gray-600 border-gray-200" },
+];
+
+// ── Org Roles (Membership Status) ──
+const ORG_ROLES = [
+  { value: "board_member",       label: "Board Member",       color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "member",             label: "Member",             color: "bg-green-100 text-green-700 border-green-200" },
+  { value: "prospective_member", label: "Prospective Member", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+];
+
+// All roles for badge display (includes legacy)
+const ALL_ROLES = [
+  ...SYSTEM_ROLES,
+  ...ORG_ROLES,
+  // Legacy roles kept for display
+  { value: "president",             label: "President (Legacy)",           color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "secretary",             label: "Secretary (Legacy)",           color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "public_image_director", label: "PI Director (Legacy)",         color: "bg-purple-100 text-purple-700 border-purple-200" },
+  { value: "membership_director",   label: "Membership Dir. (Legacy)",     color: "bg-purple-100 text-purple-700 border-purple-200" },
+  { value: "project_director",      label: "Project Dir. (Legacy)",        color: "bg-purple-100 text-purple-700 border-purple-200" },
+  { value: "event_manager",         label: "Event Manager (Legacy)",       color: "bg-teal-100 text-teal-700 border-teal-200" },
+  { value: "applicant",             label: "Applicant (Legacy)",           color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
 ];
 
 type UserRecord = {
@@ -140,12 +154,12 @@ export default function AdminMembersPage() {
     setSaving(true);
     const supabase = createClient() as any;
     try {
-      // Upgrade role to member
+      // Deactivate prospective_member and applicant (legacy) roles
       await supabase
         .from("user_roles")
         .update({ is_active: false })
         .eq("user_id", user.user_id)
-        .eq("role", "applicant");
+        .in("role", ["prospective_member", "applicant"]);
 
       const { error } = await supabase.from("user_roles").upsert(
         { user_id: user.user_id, role: "member", is_active: true },
@@ -214,11 +228,18 @@ export default function AdminMembersPage() {
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const admins = filtered.filter((u) =>
-    u.roles.some((r) => ["super_admin", "admin", "president", "secretary", "board_member", "event_manager", "project_director", "membership_director", "public_image_director"].includes(r))
+  const BOARD_ROLES_LIST = ["super_admin", "admin", "board_member", "president", "secretary",
+    "public_image_director", "membership_director", "project_director", "event_manager"];
+  const boardAndAdmins = filtered.filter((u) =>
+    u.roles.some((r) => BOARD_ROLES_LIST.includes(r))
   );
-  const members = filtered.filter((u) => u.roles.includes("member") && !admins.includes(u));
-  const applicants = filtered.filter((u) => u.roles.includes("applicant") && !members.includes(u) && !admins.includes(u));
+  const members = filtered.filter((u) =>
+    u.roles.includes("member") && !boardAndAdmins.includes(u)
+  );
+  const prospectives = filtered.filter((u) =>
+    (u.roles.includes("prospective_member") || u.roles.includes("applicant")) &&
+    !members.includes(u) && !boardAndAdmins.includes(u)
+  );
 
   function UserTable({ list }: { list: UserRecord[] }) {
     return (
@@ -242,7 +263,8 @@ export default function AdminMembersPage() {
               {user.roles.length > 2 && (
                 <Badge variant="outline" className="text-xs">+{user.roles.length - 2}</Badge>
               )}
-              {user.roles.includes("applicant") && !user.roles.includes("member") && (
+              {(user.roles.includes("prospective_member") || user.roles.includes("applicant")) &&
+                !user.roles.includes("member") && !user.roles.some((r) => BOARD_ROLES_LIST.includes(r)) && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -324,13 +346,13 @@ export default function AdminMembersPage() {
                   />
                 </div>
                 <div>
-                  <Label>Initial Role</Label>
+                  <Label>Initial Org Role</Label>
                   <Select value={createForm.role} onValueChange={(v) => setCreateForm({ ...createForm, role: v })}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {ALL_ROLES.map((r) => (
+                      {ORG_ROLES.map((r) => (
                         <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -368,14 +390,17 @@ export default function AdminMembersPage() {
           <TabsTrigger value="all" className="flex items-center gap-1.5">
             <Users className="h-4 w-4" /> All ({filtered.length})
           </TabsTrigger>
-          <TabsTrigger value="admins" className="flex items-center gap-1.5">
-            <Shield className="h-4 w-4" /> Admins ({admins.length})
+          <TabsTrigger value="board" className="flex items-center gap-1.5">
+            <Shield className="h-4 w-4" /> Board & Admins ({boardAndAdmins.length})
           </TabsTrigger>
           <TabsTrigger value="members" className="flex items-center gap-1.5">
             <UserCheck className="h-4 w-4" /> Members ({members.length})
           </TabsTrigger>
-          <TabsTrigger value="applicants" className="flex items-center gap-1.5">
-            <User className="h-4 w-4" /> Applicants ({applicants.length})
+          <TabsTrigger value="prospective" className="flex items-center gap-1.5">
+            <User className="h-4 w-4" /> Prospective ({prospectives.length})
+            {prospectives.length > 0 && (
+              <Badge className="bg-rotary-gold text-black ml-1 text-xs">{prospectives.length}</Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -391,13 +416,13 @@ export default function AdminMembersPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="admins">
+        <TabsContent value="board">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Board Members & Admins</CardTitle>
             </CardHeader>
             <CardContent>
-              <UserTable list={admins} />
+              <UserTable list={boardAndAdmins} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -413,21 +438,21 @@ export default function AdminMembersPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="applicants">
+        <TabsContent value="prospective">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                Pending Applicants
-                {applicants.length > 0 && (
-                  <Badge className="bg-rotary-gold text-black">{applicants.length}</Badge>
+                Prospective Members
+                {prospectives.length > 0 && (
+                  <Badge className="bg-rotary-gold text-black">{prospectives.length}</Badge>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {applicants.length === 0 ? (
-                <p className="text-sm text-pewter text-center py-6">No pending applicants</p>
+              {prospectives.length === 0 ? (
+                <p className="text-sm text-pewter text-center py-6">No prospective members</p>
               ) : (
-                <UserTable list={applicants} />
+                <UserTable list={prospectives} />
               )}
             </CardContent>
           </Card>
@@ -452,17 +477,25 @@ export default function AdminMembersPage() {
               </div>
             </div>
             <div>
-              <Label>Add Role</Label>
+              <Label className="text-xs font-semibold uppercase text-pewter tracking-wide">System Role (Dashboard Access)</Label>
               <Select value={newRole} onValueChange={setNewRole}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ALL_ROLES.map((r) => (
+                  <SelectItem value="__section_system" disabled className="text-xs font-semibold text-pewter">── System Roles ──</SelectItem>
+                  {SYSTEM_ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                  <SelectItem value="__section_org" disabled className="text-xs font-semibold text-pewter">── Org Roles ──</SelectItem>
+                  {ORG_ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-pewter mt-1">
+                System roles: <strong>Admin</strong> = dashboard access. Org roles: <strong>Board Member</strong> = elevated privileges, <strong>Member</strong> = approved, <strong>Prospective</strong> = pending.
+              </p>
             </div>
           </div>
           <DialogFooter>

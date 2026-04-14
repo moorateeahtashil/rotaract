@@ -3,7 +3,6 @@ name: Rotaract Platform Project State
 description: Key details about the Rotaract club management platform architecture, fixes applied, and ongoing work
 type: project
 ---
-
 Full-stack Rotaract club management platform: Next.js 15, React 19, Supabase, Tailwind CSS, shadcn/ui.
 
 ## Architecture
@@ -11,40 +10,63 @@ Full-stack Rotaract club management platform: Next.js 15, React 19, Supabase, Ta
 - Auth: Supabase Auth + user_roles table + middleware for route protection
 - Key URL groups: `(public)`, `(auth)`, `member/`, `admin/`, `(admin)/`
 
-## Role Hierarchy (lower = more privilege)
-super_admin(0) > admin(1) > president(2) > secretary(3) > public_image_director(4) > membership_director(5) > project_director(6) > event_manager(7) > board_member(8) > member(9) > applicant(10) > public(11)
+## Role System (Restructured — April 2026, Migration 011)
+Two-dimensional RBAC:
+
+System Roles (Dashboard Access):
+- super_admin (0): DB-level only. Ultimate access.
+- admin (1): Access Admin Dashboard.
+
+Org Roles (Membership Status):
+- board_member (2): Elevated privileges, internal members section, content creation.
+- member (3): Standard approved member.
+- prospective_member (4): Pending/trial member. No member portal access.
+- normal (5): Standard system role. No special access.
+
+Legacy roles kept in DB (treated as board_member level): president, secretary, public_image_director, membership_director, project_director, event_manager, applicant.
+
+Access Rules:
+- Admin Dashboard: roles IN ('super_admin', 'admin') only
+- Member Portal: roles IN ('super_admin', 'admin', 'board_member', 'member', + legacy board roles)
+- Pending: prospective_member, normal, no roles
+
+## Key Auth Files
+- Guards: lib/auth/guards.ts — requireAdmin(), requireMember(), requireBoardMember()
+- Session: lib/auth/session.ts — ADMIN_ROLES, BOARD_ROLES, MEMBER_ROLES, canAccessAdmin(), canAccessMemberPortal(), hasBoardPrivileges()
+- Middleware: middleware.ts (uses ADMIN_SYSTEM_ROLES / MEMBER_ACCESS_ROLES arrays)
+- Admin sidebar: components/admin/admin-sidebar.tsx
 
 ## Signup/Approval Flow
-1. User signs up → gets `applicant` role (via DB trigger in migration 006)
-2. Applicants see `/member/pending` page (middleware redirects them there)
-3. Admin/super_admin approves via `/admin/members` → upgrades to `member` role
-4. Admin can also invite users via `/api/admin/users/invite` (uses service role)
+1. User signs up → gets prospective_member role (via DB trigger in migration 011)
+2. Prospective members see /pending page (middleware redirects them there)
+3. Admin approves via /admin/members → deactivates prospective_member → grants member role
+4. Admin can invite users via /api/admin/users/invite
 
-## Dashboard Routing
-- Admin/board roles → `/admin`
-- Members → `/member`
-- Applicants/public → `/member/pending`
-- Login page checks role after auth and redirects accordingly
+## Admin Dashboard — Key Changes
+- Removed: Navigation management, Pages management sections from sidebar
+- Added: Committees management (/admin/committees)
+- Updated: Legal Pages uses TipTap WYSIWYG editor (HTML storage, not Markdown)
+- Expanded: Site Settings has tabs: General, Branding, Footer, Social Media, Contact
 
-## Key Fixes Applied (April 2026)
-- Fixed Globe import missing in about/our-club/page.tsx
-- Fixed recharts "Event handlers" error: moved charts to AdminCharts client component
-- Fixed createServerClient() missing await in profile, announcements, bookings, directory, resources pages
-- Fixed guard.redirect → guard.redirectTo (renamed property in guards.ts)
-- Fixed QR generate API (broken imports: createServiceClient → createServiceRoleClient)
-- Fixed attendance scan API (broken import: createClient → createServerClient)
-- Added role-based redirect in middleware and login page
-- Terms/Privacy now DB-backed (admin-editable via /admin/content)
-- Profile page converted to client form (profile-form.tsx)
-- Migration 006: event_types table + membership_applications + applicant role trigger
+## Profile Fields (Updated)
+profiles table now has: year_of_service, profile_complete, short_bio (migration 011)
+Profile form shows: name, email, phone, year_of_service, classification (read-only), occupation, company, short_bio, bio, address fields, committee memberships (read-only), social links
 
-## Important File Locations
-- Guards: lib/auth/guards.ts (returns { redirectTo } on failure, { session, userId, roles, highestRole } on success)
-- Middleware: middleware.ts (handles route protection + role-based redirects)
-- Member layout: app/member/layout.tsx (uses MemberShell component with role info)
-- Admin charts: components/admin/admin-charts.tsx ("use client" wrapper for recharts)
-- Member shell: components/layout/member-shell.tsx (sidebar + header with role badge)
+## Committees
+- Admin page: /admin/committees (full CRUD)
+- DB: committees table with chair_member_id (board member), wallet_address (new in 011)
+- committee_members table for member-committee many-to-many
 
-## Why: Compliance/UX
-- Terms/Privacy should follow Rotary International branding guidelines
-- Rotary brand colors: Blue (#17458f), Gold (#f7a81b), Azure (#0066cc)
+## People / Board Members
+- Public all-members page: /members (with tab nav to /leadership)
+- Public board members page: /leadership (Board Members view)
+- Both pages share tab navigation between "All Members" and "Board Members"
+
+## Rich Text Editor
+- TipTap already installed (@tiptap/react, @tiptap/starter-kit, etc.)
+- Reusable component: components/ui/rich-text-editor.tsx
+- Used in: Legal Pages editor (/admin/content)
+- Terms/Privacy front-end: detects HTML vs legacy Markdown, renders accordingly
+
+## DB Migrations Applied
+001 → 011 (latest). Run: supabase db push or apply migrations in Supabase Dashboard SQL Editor.

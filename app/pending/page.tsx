@@ -26,22 +26,16 @@ export default async function PendingPage() {
     .eq("user_id", session.user.id)
     .eq("is_active", true);
 
-  const ROLE_HIERARCHY: Record<string, number> = {
-    super_admin: 0, admin: 1, president: 2, secretary: 3,
-    public_image_director: 4, membership_director: 5,
-    project_director: 6, event_manager: 7, board_member: 8,
-    member: 9, applicant: 10, public: 11,
-  };
+  const ADMIN_ROLES = ["super_admin", "admin"];
+  const MEMBER_ROLES = [
+    "super_admin", "admin", "board_member", "member",
+    "president", "secretary", "public_image_director",
+    "membership_director", "project_director", "event_manager",
+  ];
 
-  const roleNames = roles?.map((r: any) => r.role) ?? [];
-  const highestRole = roleNames.length
-    ? roleNames.reduce((min: string, r: string) =>
-        (ROLE_HIERARCHY[r] ?? 99) < (ROLE_HIERARCHY[min] ?? 99) ? r : min,
-        roleNames[0])
-    : "applicant";
-
-  const isAdmin = ROLE_HIERARCHY[highestRole] <= ROLE_HIERARCHY["board_member"];
-  const isMember = highestRole === "member";
+  const roleNames: string[] = roles?.map((r: any) => r.role) ?? [];
+  const isAdmin = roleNames.some((r) => ADMIN_ROLES.includes(r));
+  const isMember = roleNames.some((r) => MEMBER_ROLES.includes(r));
 
   if (isAdmin) return redirect("/admin");
   if (isMember) return redirect("/member");

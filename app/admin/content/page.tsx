@@ -4,57 +4,17 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { Save, FileText, Eye } from "lucide-react";
 import { createClient } from "@/lib/db/browser-client";
 import Link from "next/link";
 
-const DEFAULT_TERMS_CONTENT = `## 1. Acceptance of Terms
+const DEFAULT_TERMS_HTML = `<h2>1. Acceptance of Terms</h2><p>By accessing and using this website, you accept and agree to be bound by these Terms of Use and our Privacy Policy. If you do not agree to these terms, please discontinue use of this site.</p><h2>2. Use of Website</h2><p>This website is provided for informational and community purposes by our Rotaract club. You agree to use this website only for lawful purposes and not to misrepresent your identity or affiliation.</p><h2>3. Member Accounts</h2><p>Members are responsible for maintaining the confidentiality of their account credentials and for all activities under their account.</p><h2>4. Contact</h2><p>Questions about these terms should be directed to our club administration through the contact page.</p>`;
 
-By accessing and using this website, you accept and agree to be bound by these Terms of Use and our Privacy Policy.
-
-## 2. Use of Website
-
-This website is provided for informational and community purposes. You may not use this website for any unlawful purpose.
-
-## 3. Content
-
-Content on this website is provided by our club members and administrators. While we strive for accuracy, we make no guarantees about completeness.
-
-## 4. User Accounts
-
-Members are responsible for maintaining the confidentiality of their account credentials and for all activities under their account.
-
-## 5. Contact
-
-Questions about these terms should be directed to our club administration through the contact page.`;
-
-const DEFAULT_PRIVACY_CONTENT = `## 1. Introduction
-
-This Privacy Policy explains how our Rotaract club collects, uses, stores, and protects your personal information.
-
-## 2. Information We Collect
-
-We collect information you provide directly, including name, email, phone number, and membership details.
-
-## 3. How We Use Your Information
-
-We use the information to manage membership, communicate with members, organize events, and comply with Rotary reporting requirements.
-
-## 4. Data Security
-
-We implement appropriate technical and organizational measures to protect your personal information.
-
-## 5. Your Rights
-
-You have the right to access, correct, or delete your personal information. Contact us to exercise these rights.
-
-## 6. Contact
-
-For privacy inquiries, please contact us through the contact page.`;
+const DEFAULT_PRIVACY_HTML = `<h2>1. Introduction</h2><p>This Privacy Policy explains how our Rotaract club collects, uses, stores, and protects your personal information.</p><h2>2. Information We Collect</h2><p>We collect information you provide directly, including name, email, phone number, and membership details.</p><h2>3. How We Use Your Information</h2><p>We use the information to manage membership, communicate with members, organize events, and comply with Rotary reporting requirements.</p><h2>4. Data Security</h2><p>We implement appropriate technical and organizational measures to protect your personal information.</p><h2>5. Your Rights</h2><p>You have the right to access, correct, or delete your personal information. Contact us to exercise these rights.</p>`;
 
 type PageContent = {
   id?: string;
@@ -69,12 +29,12 @@ export default function AdminContentPage() {
   const [termsContent, setTermsContent] = useState<PageContent>({
     title: "Terms of Use",
     slug: "terms-of-use",
-    content: DEFAULT_TERMS_CONTENT,
+    content: DEFAULT_TERMS_HTML,
   });
   const [privacyContent, setPrivacyContent] = useState<PageContent>({
     title: "Privacy Policy",
     slug: "privacy-policy",
-    content: DEFAULT_PRIVACY_CONTENT,
+    content: DEFAULT_PRIVACY_HTML,
   });
 
   useEffect(() => {
@@ -99,7 +59,7 @@ export default function AdminContentPage() {
           id: termsPage.id,
           title: termsPage.title,
           slug: termsPage.slug,
-          content: block?.content || DEFAULT_TERMS_CONTENT,
+          content: block?.content || DEFAULT_TERMS_HTML,
         });
       }
       if (privacyPage) {
@@ -108,7 +68,7 @@ export default function AdminContentPage() {
           id: privacyPage.id,
           title: privacyPage.title,
           slug: privacyPage.slug,
-          content: block?.content || DEFAULT_PRIVACY_CONTENT,
+          content: block?.content || DEFAULT_PRIVACY_HTML,
         });
       }
     }
@@ -122,7 +82,6 @@ export default function AdminContentPage() {
       let pageId = pageData.id;
 
       if (!pageId) {
-        // Create the page
         const { data: newPage, error: pageError } = await (supabase as any)
           .from("pages")
           .insert({
@@ -137,14 +96,12 @@ export default function AdminContentPage() {
         if (pageError) throw pageError;
         pageId = newPage.id;
       } else {
-        // Update the page
         await (supabase as any)
           .from("pages")
           .update({ title: pageData.title, updated_at: new Date().toISOString() })
           .eq("id", pageId);
       }
 
-      // Upsert the text block
       const { data: existingBlock } = await (supabase as any)
         .from("page_blocks")
         .select("id")
@@ -183,15 +140,9 @@ export default function AdminContentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-charcoal">Legal Pages</h1>
-          <p className="text-sm text-pewter">Edit Terms of Use and Privacy Policy content</p>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        <strong>Markdown formatting:</strong> Use <code>## Heading</code> for sections, <code>**bold**</code> for emphasis, and <code>- item</code> for bullet lists.
+      <div>
+        <h1 className="text-2xl font-bold text-charcoal">Legal Pages</h1>
+        <p className="text-sm text-pewter">Edit Terms of Use and Privacy Policy using the rich text editor below.</p>
       </div>
 
       <Tabs defaultValue="terms">
@@ -237,12 +188,11 @@ export default function AdminContentPage() {
                 />
               </div>
               <div>
-                <Label>Content (Markdown)</Label>
-                <Textarea
+                <Label className="mb-2 block">Content</Label>
+                <RichTextEditor
                   value={termsContent.content}
-                  onChange={(e) => setTermsContent({ ...termsContent, content: e.target.value })}
-                  rows={30}
-                  className="mt-1 font-mono text-sm"
+                  onChange={(html) => setTermsContent({ ...termsContent, content: html })}
+                  placeholder="Enter the Terms of Use content..."
                 />
               </div>
             </CardContent>
@@ -282,12 +232,11 @@ export default function AdminContentPage() {
                 />
               </div>
               <div>
-                <Label>Content (Markdown)</Label>
-                <Textarea
+                <Label className="mb-2 block">Content</Label>
+                <RichTextEditor
                   value={privacyContent.content}
-                  onChange={(e) => setPrivacyContent({ ...privacyContent, content: e.target.value })}
-                  rows={30}
-                  className="mt-1 font-mono text-sm"
+                  onChange={(html) => setPrivacyContent({ ...privacyContent, content: html })}
+                  placeholder="Enter the Privacy Policy content..."
                 />
               </div>
             </CardContent>

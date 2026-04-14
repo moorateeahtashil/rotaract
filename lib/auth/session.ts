@@ -3,28 +3,40 @@ import type { Database } from "@/lib/db/types";
 
 type UserRole = Database["public"]["Enums"]["user_role_type"];
 
-// Role hierarchy — lower number = higher privilege
-const ROLE_HIERARCHY: Record<UserRole, number> = {
+// ─── Simplified RBAC ───
+// System roles (dashboard access): super_admin, admin
+// Standard system role (no dashboard): normal
+// Org roles (membership status): board_member, member, prospective_member
+// Legacy roles kept for backwards compat but mapped to board_member level
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  // System roles
   super_admin: 0,
   admin: 1,
+  // Org roles
+  board_member: 2,
+  member: 3,
+  prospective_member: 4,
+  normal: 5,
+  // Legacy org roles (treat as board_member)
   president: 2,
-  secretary: 3,
-  public_image_director: 4,
-  membership_director: 5,
-  project_director: 6,
-  event_manager: 7,
-  board_member: 8,
-  member: 9,
-  applicant: 10,
-  public: 11,
+  secretary: 2,
+  public_image_director: 2,
+  membership_director: 2,
+  project_director: 2,
+  event_manager: 2,
+  // Legacy pending role
+  applicant: 4,
+  public: 5,
 };
 
 export async function getSession() {
   const supabase = await createServerClient() as any;
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+  // Use getUser() — authenticates with Supabase Auth server (not just cookies)
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (!user || error) return null;
+  // Return a session-like object so all callers using session.user.id continue to work
+  return { user };
 }
 
 export async function getCurrentUser() {
@@ -120,26 +132,58 @@ function getHighestRoleSync(roles: UserRole[]): UserRole {
   }, "public");
 }
 
-export const ADMIN_ROLES: UserRole[] = [
+// Roles that can access the Admin Dashboard
+export const ADMIN_ROLES: string[] = [
   "super_admin",
   "admin",
-  "president",
-  "secretary",
-  "public_image_director",
-  "membership_director",
-  "project_director",
-  "event_manager",
-  "board_member",
 ];
 
-export const BOARD_ROLES: UserRole[] = [
+// Roles that have board/elevated privileges (internal members section, project/event creation)
+export const BOARD_ROLES: string[] = [
   "super_admin",
   "admin",
+  "board_member",
+  // Legacy board roles
   "president",
   "secretary",
   "public_image_director",
   "membership_director",
   "project_director",
   "event_manager",
-  "board_member",
 ];
+
+// Roles that can access the member portal
+export const MEMBER_ROLES: string[] = [
+  "super_admin",
+  "admin",
+  "board_member",
+  "member",
+  // Legacy board roles
+  "president",
+  "secretary",
+  "public_image_director",
+  "membership_director",
+  "project_director",
+  "event_manager",
+];
+
+// Helper to check dashboard access
+export function canAccessAdmin(roles: string[]): boolean {
+  return roles.some((r) => ADMIN_ROLES.includes(r));
+}
+
+// Helper to check member portal access
+export function canAccessMemberPortal(roles: string[]): boolean {
+  return roles.some((r) => MEMBER_ROLES.includes(r));
+}
+
+// Helper to check board member privileges
+export function hasBoardPrivileges(roles: string[]): boolean {
+  return roles.some((r) => BOARD_ROLES.includes(r));
+}
+
+// Helper to check if user is pending approval
+export function isPendingUser(roles: string[]): boolean {
+  if (!roles.length) return true;
+  return !canAccessMemberPortal(roles);
+}

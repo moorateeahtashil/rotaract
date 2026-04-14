@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, Mail, Briefcase } from "lucide-react";
 import { getInitials } from "@/lib/utils";
+import Link from "next/link";
 
 export const metadata = {
   title: "Leadership & Board Members",
@@ -33,6 +34,26 @@ export default async function LeadershipPage() {
           </p>
         </div>
       </section>
+
+      {/* Section nav */}
+      <div className="border-b border-border bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-6">
+            <Link
+              href="/members"
+              className="py-4 text-sm font-medium text-pewter hover:text-charcoal transition-colors"
+            >
+              All Members
+            </Link>
+            <Link
+              href="/leadership"
+              className="py-4 text-sm font-medium text-rotary-blue border-b-2 border-rotary-blue"
+            >
+              Board Members
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Board Members */}
       <section className="py-12 sm:py-16">

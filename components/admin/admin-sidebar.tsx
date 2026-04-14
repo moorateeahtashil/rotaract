@@ -39,8 +39,6 @@ const ADMIN_NAV = [
     category: "Content",
     items: [
       { label: "Site Settings", href: "/admin/settings", icon: Settings },
-      { label: "Navigation", href: "/admin/navigation", icon: Compass },
-      { label: "Pages", href: "/admin/pages", icon: FileText },
       { label: "Legal Pages", href: "/admin/content", icon: ScrollText },
     ],
   },
@@ -49,6 +47,7 @@ const ADMIN_NAV = [
     items: [
       { label: "Members", href: "/admin/members", icon: Users },
       { label: "Board", href: "/admin/board", icon: Shield },
+      { label: "Committees", href: "/admin/committees", icon: Users },
     ],
   },
   {

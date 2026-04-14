@@ -1,26 +1,34 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const ROLE_HIERARCHY: Record<string, number> = {
-  super_admin: 0, admin: 1, president: 2, secretary: 3,
-  public_image_director: 4, membership_director: 5,
-  project_director: 6, event_manager: 7, board_member: 8,
-  member: 9, applicant: 10, public: 11,
-};
+// System roles that grant admin dashboard access
+const ADMIN_SYSTEM_ROLES = ["super_admin", "admin"];
 
-async function getHighestRole(supabase: any, userId: string): Promise<string> {
+// Org roles (and legacy roles) that grant member portal access
+const MEMBER_ACCESS_ROLES = [
+  "super_admin", "admin",
+  "board_member", "member",
+  // Legacy board roles — treated as board_member
+  "president", "secretary", "public_image_director",
+  "membership_director", "project_director", "event_manager",
+];
+
+async function getUserRoles(supabase: any, userId: string): Promise<string[]> {
   const { data: roles } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
     .eq("is_active", true);
 
-  if (!roles?.length) return "public";
+  return roles?.map((r: { role: string }) => r.role) ?? [];
+}
 
-  return roles.reduce((min: string, r: { role: string }) =>
-    ROLE_HIERARCHY[r.role] < ROLE_HIERARCHY[min] ? r.role : min,
-    "public"
-  );
+function canAccessAdmin(roles: string[]): boolean {
+  return roles.some((r) => ADMIN_SYSTEM_ROLES.includes(r));
+}
+
+function canAccessMemberPortal(roles: string[]): boolean {
+  return roles.some((r) => MEMBER_ACCESS_ROLES.includes(r));
 }
 
 export async function middleware(request: NextRequest) {
@@ -42,7 +50,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user: sessionUser } } = await supabase.auth.getUser();
+  // Treat as "session exists" if getUser() returns a verified user
+  const session = sessionUser ? { user: sessionUser } : null;
   const pathname = request.nextUrl.pathname;
 
   // ─── Maintenance mode ───
@@ -67,8 +77,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const highestRole = await getHighestRole(supabase, session.user.id);
-    if (highestRole === "applicant" || highestRole === "public") {
+    const roles = await getUserRoles(supabase, session.user.id);
+    if (!canAccessMemberPortal(roles)) {
       return NextResponse.redirect(new URL("/pending", request.url));
     }
   }
@@ -81,22 +91,23 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const highestRole = await getHighestRole(supabase, session.user.id);
-    if (ROLE_HIERARCHY[highestRole] > ROLE_HIERARCHY["board_member"]) {
+    const roles = await getUserRoles(supabase, session.user.id);
+    if (!canAccessAdmin(roles)) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
 
   // ─── Redirect logged-in users away from auth pages ───
   if (session && (pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password")) {
-    const highestRole = await getHighestRole(supabase, session.user.id);
+    const roles = await getUserRoles(supabase, session.user.id);
 
-    if (highestRole === "applicant" || highestRole === "public") {
-      return NextResponse.redirect(new URL("/pending", request.url));
+    if (canAccessAdmin(roles)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
-
-    const isAdmin = ROLE_HIERARCHY[highestRole] <= ROLE_HIERARCHY["board_member"];
-    return NextResponse.redirect(new URL(isAdmin ? "/admin" : "/member", request.url));
+    if (canAccessMemberPortal(roles)) {
+      return NextResponse.redirect(new URL("/member", request.url));
+    }
+    return NextResponse.redirect(new URL("/pending", request.url));
   }
 
   return supabaseResponse;

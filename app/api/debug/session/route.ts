@@ -3,14 +3,14 @@ import { createServerClient } from "@/lib/db/server";
 
 export async function GET() {
   const supabase = await createServerClient() as any;
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user || userError) {
     return NextResponse.json({ session: null, roles: [], note: "No session" });
   }
 
-  const userId = session.user.id;
-  const email = session.user.email;
+  const userId = user.id;
+  const email = user.email;
   const { data: roles, error } = await supabase
     .from("user_roles")
     .select("role, is_active")
@@ -24,4 +24,3 @@ export async function GET() {
     error: error?.message,
   });
 }
-
