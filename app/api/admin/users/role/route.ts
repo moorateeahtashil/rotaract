@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/db/server";
+import { createServerClient, createServiceRoleClient } from "@/lib/db/server";
 import { cookies } from "next/headers";
 
 const ADMIN_ROLES = [
@@ -17,24 +17,22 @@ const ADMIN_ROLES = [
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerClient() as any;
-    const cookieStore = cookies();
+    const service = createServiceRoleClient() as any;
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if current user is admin
-    const { data: currentRole } = await supabase
+    // Check if current user is admin (service role bypasses RLS)
+    const { data: adminRoles } = await service
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("is_active", true)
-      .order("role", { ascending: true })
-      .limit(1)
-      .single();
+      .eq("is_active", true);
 
-    if (!currentRole || !["super_admin", "admin"].includes(currentRole.role)) {
+    const isAdmin = (adminRoles || []).some((r: any) => ["super_admin", "admin"].includes(r.role));
+    if (!isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
@@ -49,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert the role
-    const { error } = await supabase
+    const { error } = await service
       .from("user_roles")
       .upsert(
         { user_id: userId, role, is_active: true },
@@ -73,11 +71,27 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createServerClient() as any;
+    const service = createServiceRoleClient() as any;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // Authorize requester
+    const { data: adminRoles } = await service
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+
+    const isAdmin = (adminRoles || []).some((r: any) => ["super_admin", "admin"].includes(r.role));
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
 
     // Get all profiles with their highest role
-    let query = supabase
+    let query = service
       .from("profiles")
       .select("id, user_id, first_name, last_name, email, created_at")
       .order("created_at", { ascending: false });
@@ -95,7 +109,7 @@ export async function GET(req: NextRequest) {
     // Get roles for each user
     const usersWithRoles = await Promise.all(
       profiles.map(async (profile: any) => {
-        const { data: roles } = await supabase
+        const { data: roles } = await service
           .from("user_roles")
           .select("role, is_active")
           .eq("user_id", profile.user_id)

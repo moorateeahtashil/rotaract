@@ -53,6 +53,8 @@ async function FooterContent() {
   const meetingLocation = getSetting("meeting_location") || "TBD";
   const contactEmail = getSetting("contact_email") || "";
   const contactPhone = getSetting("contact_phone") || "";
+  const siteLogo = getSetting("site_logo_url") || "";
+  const siteClubName = getSetting("club_name") || "Rotaract Club";
 
   return (
     <footer className="bg-gradient-to-b from-charcoal to-black text-silver">
@@ -62,7 +64,8 @@ async function FooterContent() {
           {/* Brand & Logo */}
           <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <RotaractLogo 
-              clubName="Rotaract Club" 
+              clubName={siteClubName}
+              logoUrl={siteLogo || undefined}
               className="mb-4" 
               href="/" 
             />

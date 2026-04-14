@@ -44,7 +44,7 @@ const MAIN_NAV = [
   { label: "FAQ", href: "/faq" },
 ];
 
-export function PublicHeader() {
+export function PublicHeader({ clubName, logoUrl }: { clubName?: string; logoUrl?: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -54,8 +54,8 @@ export function PublicHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo - Rotary Masterbrand */}
-          <RotaractLogo clubName="Rotaract Club" className="flex-shrink-0" />
+          {/* Logo - from settings if available */}
+          <RotaractLogo clubName={clubName || "Rotaract Club"} logoUrl={logoUrl} className="flex-shrink-0" />
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">
