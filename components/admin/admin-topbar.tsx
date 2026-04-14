@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/db/client";
+import { createBrowserClient } from "@/lib/db/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ export function AdminTopbar() {
   const router = useRouter();
 
   async function handleSignOut() {
-    const supabase = createClient();
+    const supabase = createBrowserClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

@@ -6,7 +6,7 @@ type UserRole = Database["public"]["Enums"]["user_role_type"];
 export async function requireAuth(redirectTo: string = "/login") {
   const session = await getSession();
   if (!session) {
-    return { redirect: redirectTo };
+    return { redirectTo };
   }
   return { session, userId: session.user.id };
 }
@@ -17,7 +17,7 @@ export async function requireRole(
 ) {
   const session = await getSession();
   if (!session) {
-    return { redirect: redirectTo };
+    return { redirectTo };
   }
 
   const roles = await getUserRoles(session.user.id);
@@ -43,7 +43,7 @@ export async function requireRole(
   );
 
   if (ROLE_HIERARCHY[highestRole] > minAllowed) {
-    return { redirect: "/unauthorized" };
+    return { redirectTo: "/unauthorized" };
   }
 
   return { session, userId: session.user.id, roles, highestRole };

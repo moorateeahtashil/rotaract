@@ -76,7 +76,7 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
   return roles?.map((r) => r.role) ?? [];
 }
 
-export async function getHighestRole(roles: UserRole[]): UserRole {
+export async function getHighestRole(roles: UserRole[]): Promise<UserRole> {
   if (!roles.length) return "public";
 
   return roles.reduce((highest, current) => {

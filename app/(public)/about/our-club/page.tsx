@@ -1,7 +1,7 @@
 import { getSiteSettings } from "@/lib/db/queries";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock, Users, Target, Heart, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, Target, Heart, ArrowRight, Globe } from "lucide-react";
 
 export const metadata = {
   title: "About Our Club",

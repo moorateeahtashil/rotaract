@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/db/client";
+import { createBrowserClient } from "@/lib/db/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {

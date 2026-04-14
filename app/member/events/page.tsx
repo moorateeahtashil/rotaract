@@ -12,7 +12,7 @@ export const metadata = { title: "My Events" };
 
 export default async function MemberEventsPage() {
   const guard = await requireMember();
-  if ("redirect" in guard) return redirect(guard.redirectTo);
+  if ("redirectTo" in guard) return redirect(guard.redirectTo);
 
   const events = await getUpcomingEvents(20);
 

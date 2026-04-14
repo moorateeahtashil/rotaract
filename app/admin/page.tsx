@@ -1,25 +1,65 @@
+import { createServerClient } from "@/lib/db/server";
+import { requireAdmin } from "@/lib/auth/guards";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminCharts } from "@/components/admin/admin-charts";
 import {
   Users,
   FolderKanban,
   Calendar,
   TrendingUp,
   Activity,
-  Mail,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-// Placeholder data — replace with actual DB queries
-const CHART_DATA = [
-  { month: "Jan", members: 40, events: 5 },
-  { month: "Feb", members: 42, events: 3 },
-  { month: "Mar", members: 45, events: 7 },
-  { month: "Apr", members: 47, events: 4 },
-  { month: "May", members: 50, events: 6 },
-  { month: "Jun", members: 52, events: 8 },
-];
+export default async function AdminDashboardPage() {
+  const guard = await requireAdmin();
+  if ("redirectTo" in guard) return redirect(guard.redirectTo);
 
-export default function AdminDashboardPage() {
+  const supabase = await createServerClient();
+
+  // Fetch real stats
+  const [
+    { count: totalMembers },
+    { count: activeEvents },
+    { count: totalProjects },
+    { count: pendingApplicants },
+  ] = await Promise.all([
+    supabase
+      .from("members")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active")
+      .is("deleted_at", null),
+    supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["published", "ongoing"])
+      .is("deleted_at", null),
+    supabase
+      .from("projects")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["planned", "active"])
+      .is("deleted_at", null),
+    supabase
+      .from("user_roles")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "applicant")
+      .eq("is_active", true),
+  ]);
+
+  const stats = [
+    { icon: Users, label: "Active Members", value: String(totalMembers ?? 0), change: "Total active" },
+    { icon: Calendar, label: "Active Events", value: String(activeEvents ?? 0), change: "Published & ongoing" },
+    { icon: FolderKanban, label: "Projects", value: String(totalProjects ?? 0), change: "Planned & active" },
+    { icon: TrendingUp, label: "Pending Applications", value: String(pendingApplicants ?? 0), change: "Awaiting approval" },
+  ];
+
+  // Recent activity
+  const { data: recentMembers } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, created_at")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
   return (
     <div className="space-y-8">
       <div>
@@ -29,12 +69,7 @@ export default function AdminDashboardPage() {
 
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { icon: Users, label: "Total Members", value: "52", change: "+3 this month" },
-          { icon: Calendar, label: "Active Events", value: "6", change: "2 upcoming" },
-          { icon: FolderKanban, label: "Projects", value: "8", change: "3 active" },
-          { icon: TrendingUp, label: "Service Hours", value: "2,500+", change: "+120 this month" },
-        ].map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-pewter">
@@ -50,67 +85,35 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Member Growth</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={CHART_DATA}>
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="members" fill="#17458f" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Events per Month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={CHART_DATA}>
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="events" fill="#f7a81b" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Charts — client component */}
+      <AdminCharts />
 
       {/* Recent Activity */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-rotary-blue" />
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
+            <CardTitle className="text-lg">Recent Sign-Ups</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-3">
-            <li className="flex items-center gap-3 text-sm">
-              <div className="h-2 w-2 rounded-full bg-rotary-blue" />
-              <span className="text-charcoal">New member joined: John Doe</span>
-              <span className="text-pewter ml-auto">2 hours ago</span>
-            </li>
-            <li className="flex items-center gap-3 text-sm">
-              <div className="h-2 w-2 rounded-full bg-rotary-gold" />
-              <span className="text-charcoal">Event "Cleanliness Drive" published</span>
-              <span className="text-pewter ml-auto">5 hours ago</span>
-            </li>
-            <li className="flex items-center gap-3 text-sm">
-              <div className="h-2 w-2 rounded-full bg-turquoise" />
-              <span className="text-charcoal">3 new event registrations</span>
-              <span className="text-pewter ml-auto">1 day ago</span>
-            </li>
-          </ul>
+          {recentMembers && recentMembers.length > 0 ? (
+            <ul className="space-y-3">
+              {recentMembers.map((m: any, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-rotary-blue" />
+                  <span className="text-charcoal">
+                    {m.first_name} {m.last_name} joined
+                  </span>
+                  <span className="text-pewter ml-auto">
+                    {new Date(m.created_at).toLocaleDateString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-pewter">No recent activity</p>
+          )}
         </CardContent>
       </Card>
     </div>

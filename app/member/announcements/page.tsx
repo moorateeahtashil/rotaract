@@ -10,9 +10,9 @@ export const metadata = { title: "Announcements" };
 
 export default async function MemberAnnouncementsPage() {
   const guard = await requireMember();
-  if ("redirect" in guard) return redirect(guard.redirectTo);
+  if ("redirectTo" in guard) return redirect(guard.redirectTo);
 
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: announcements } = await supabase
     .from("announcements")

@@ -63,9 +63,9 @@ export default function SignupPage() {
       if (error) throw error;
 
       toast({
-        title: "Account created!",
+        title: "Application submitted!",
         description:
-          "Please check your email to confirm your account. Once confirmed, an admin will activate your membership.",
+          "Please check your email to confirm your address. Once confirmed, an admin will review and approve your membership.",
       });
 
       router.push("/login");

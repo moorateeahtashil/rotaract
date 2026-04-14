@@ -41,6 +41,7 @@ const ADMIN_NAV = [
       { label: "Site Settings", href: "/admin/settings", icon: Settings },
       { label: "Navigation", href: "/admin/navigation", icon: Compass },
       { label: "Pages", href: "/admin/pages", icon: FileText },
+      { label: "Legal Pages", href: "/admin/content", icon: ScrollText },
     ],
   },
   {
@@ -54,6 +55,7 @@ const ADMIN_NAV = [
     category: "Program",
     items: [
       { label: "Events", href: "/admin/events", icon: Calendar },
+      { label: "Event Types", href: "/admin/event-types", icon: FileText },
       { label: "Projects", href: "/admin/projects", icon: FolderKanban },
       { label: "Avenues", href: "/admin/avenues", icon: Compass },
       { label: "News", href: "/admin/news", icon: Newspaper },

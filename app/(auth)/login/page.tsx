@@ -42,13 +42,13 @@ export default function LoginPage() {
     },
   });
 
-  const redirectTo = searchParams.get("redirectTo") || "/member";
+  const redirectTo = searchParams.get("redirectTo");
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
@@ -60,7 +60,33 @@ export default function LoginPage() {
         description: "You have been signed in successfully.",
       });
 
-      router.push(redirectTo);
+      // Determine redirect based on role
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else if (authData.user) {
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .eq("is_active", true);
+
+        const ROLE_HIERARCHY: Record<string, number> = {
+          super_admin: 0, admin: 1, president: 2, secretary: 3,
+          public_image_director: 4, membership_director: 5,
+          project_director: 6, event_manager: 7, board_member: 8,
+          member: 9, applicant: 10, public: 11,
+        };
+
+        const highestRole = roles?.length
+          ? roles.reduce((min: string, r: { role: string }) =>
+              ROLE_HIERARCHY[r.role] < ROLE_HIERARCHY[min] ? r.role : min, "public")
+          : "public";
+
+        const isAdmin = ROLE_HIERARCHY[highestRole] <= ROLE_HIERARCHY["board_member"];
+        router.push(isAdmin ? "/admin" : "/member");
+      } else {
+        router.push("/member");
+      }
       router.refresh();
     } catch (error) {
       toast({

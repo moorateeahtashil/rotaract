@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/db/server";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/db/server";
 
 /**
  * POST /api/attendance/scan
@@ -8,7 +7,7 @@ import { cookies } from "next/headers";
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient(cookies());
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -29,29 +28,28 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (memberError || !member) {
-      return NextResponse.json({ error: "Member profile not found" }, { status: 404 });
+      return NextResponse.json({ error: "Member profile not found. Please contact an admin." }, { status: 404 });
     }
 
     // Find the QR code
     const { data: qrCode, error: qrError } = await supabase
       .from("event_qr_codes")
-      .select("id, event_id, expires_at, is_active, events!inner(title)")
+      .select("id, event_id, expires_at, is_active, events!inner(title, date, status)")
       .eq("token", token)
       .single();
 
     if (qrError || !qrCode) {
-      return NextResponse.json({ error: "Invalid QR code token" }, { status: 404 });
+      return NextResponse.json({ error: "Invalid QR code. Please check the code and try again." }, { status: 404 });
     }
 
     const qr = qrCode as any;
 
-    // Check if QR code is active and not expired
     if (!qr.is_active) {
-      return NextResponse.json({ error: "This QR code is no longer active" }, { status: 410 });
+      return NextResponse.json({ error: "This QR code is no longer active." }, { status: 410 });
     }
 
     if (qr.expires_at && new Date(qr.expires_at) < new Date()) {
-      return NextResponse.json({ error: "This QR code has expired" }, { status: 410 });
+      return NextResponse.json({ error: "This QR code has expired." }, { status: 410 });
     }
 
     // Check if member already scanned for this event
@@ -63,9 +61,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (existingScan) {
-      return NextResponse.json({ 
-        error: "You have already marked attendance for this event",
-        eventTitle: qr.events?.title 
+      return NextResponse.json({
+        error: "You have already marked attendance for this event.",
+        eventTitle: qr.events?.title,
       }, { status: 409 });
     }
 
@@ -80,18 +78,14 @@ export async function POST(req: NextRequest) {
       });
 
     if (insertError) {
-      return NextResponse.json({ error: "Failed to record attendance" }, { status: 500 });
+      console.error("Attendance insert error:", insertError);
+      return NextResponse.json({ error: "Failed to record attendance. Please try again." }, { status: 500 });
     }
 
-    // Also update attendance_records
-    await supabase
-      .from("attendance_records")
-      .upsert({
-        member_id: member.id,
-        event_id: qr.event_id,
-        date: new Date().toISOString().split("T")[0],
-        status: "present",
-      }, { onConflict: "member_id,event_id" });
+    // Update member's total events count
+    await supabase.rpc("increment_member_events", { p_member_id: member.id }).catch(() => {
+      // Non-critical — ignore if function doesn't exist
+    });
 
     return NextResponse.json({
       success: true,
