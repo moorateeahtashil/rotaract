@@ -4,50 +4,55 @@ import { getProjects, getEvents } from "@/lib/db/queries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, FolderKanban, Calendar, Heart, Users, Briefcase, Globe, Handshake } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart, Users, Briefcase, Globe, GraduationCap } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
-// Hardcoded Five Avenues of Service
+// The Five Avenues of Service — Rotary International's philosophical cornerstone
 const AVENUES = [
   {
     slug: "club-service",
     name: "Club Service",
-    description: "Activities that strengthen and grow the Rotaract club itself — member development, fellowship, and building a cohesive team committed to service.",
-    long_description: "Club Service encompasses everything we do to keep our club vibrant and effective. From welcoming new members and organizing meetings to planning social events and developing club leadership, this avenue ensures Rotaractors have the community and skills to serve others.\n\nWe invest in our own club so that we can better invest in the communities around us. Strong clubs produce strong service.",
+    avenue: "First Avenue of Service",
+    description: "Club Service works to strengthen fellowship of members through training and hospitality.",
+    long_description: "Club Service works to strengthen fellowship of members through training and hospitality. Clubs have serious topics to work toward, so having various social events that bring members and their guests informally and for fun, contributes to genuine fellowship.\n\nClub Service encompasses everything we do to keep our club vibrant and effective. From welcoming new members and organizing meetings to planning social events and developing club leadership, this avenue ensures Rotaractors have the community and skills to serve others.\n\nWe invest in our own club so that we can better invest in the communities around us. Strong clubs produce strong service.",
     icon: Users,
     color: "#17458f",
   },
   {
+    slug: "vocational-service",
+    name: "Vocational Service",
+    avenue: "Second Avenue of Service",
+    description: "Vocational Service encourages members to serve other people through their vocations, education, skillsets, which encourages high ethical standards.",
+    long_description: "Vocational Service encourages members to serve other people through their vocations, education, skillsets, which encourages high ethical standards. October is Vocational Service Month when the many club service projects are celebrated.\n\nVocational Service recognizes that great service comes from skilled, confident people. Through workshops, mentoring, networking events, and opportunities to apply professional skills in club projects, this avenue helps Rotaractors become the leaders their communities need.\n\nWe believe in growing ourselves so we can grow others. Professional Development is where service and personal ambition unite.",
+    icon: Briefcase,
+    color: "#f7a81b",
+  },
+  {
     slug: "community-service",
     name: "Community Service",
-    description: "Projects that directly address the needs of people in our local area — from education and health to environment and economic development.",
-    long_description: "Community Service is at the heart of what Rotaractors do. Through hands-on projects, fundraising, and partnerships with local organisations, we tackle real problems affecting real people in our community. This avenue turns compassion into action.\n\nWhether it's a health camp, a literacy drive, or an environmental clean-up, Community Service brings our values to life in the places we call home.",
+    avenue: "Third Avenue of Service",
+    description: "Community Service is projects and activities each club undertakes to improve community life.",
+    long_description: "Community Service is exactly what the name implies — projects and activities each club undertakes to improve community life. There are many projects in which Rotaractors have been involved: park improvements, senior center support, scholarships, and more.\n\nCommunity Service is at the heart of what Rotaractors do. Through hands-on projects, fundraising, and partnerships with local organisations, we tackle real problems affecting real people in our community. This avenue turns compassion into action.\n\nWhether it's a health camp, a literacy drive, or an environmental clean-up, Community Service brings our values to life in the places we call home.",
     icon: Heart,
     color: "#c50e2e",
   },
   {
     slug: "international-service",
     name: "International Service",
-    description: "Activities that foster international understanding, peace, and goodwill — connecting Rotaractors across borders and supporting global humanitarian efforts.",
-    long_description: "International Service reflects Rotary's belief that peace is built through friendship and understanding. We partner with clubs worldwide, support international projects, and explore global cultures and challenges — because the problems of one community are often the challenges of all communities.\n\nThrough international exchanges, joint projects, and global campaigns like End Polio Now, we become citizens of the world.",
+    avenue: "Fourth Avenue of Service",
+    description: "International Service volunteers work to expand humanitarian work around the world.",
+    long_description: "International Service volunteers work to expand the Rotarians' humanitarian work around the world. This important service promotes understanding and peace, sponsors projects in other countries and works with international partners to support projects in their communities.\n\nInternational Service reflects Rotary's belief that peace is built through friendship and understanding. We partner with clubs worldwide, support international projects, and explore global cultures and challenges — because the problems of one community are often the challenges of all communities.\n\nThrough international exchanges, joint projects, and global campaigns like End Polio Now, we become citizens of the world.",
     icon: Globe,
     color: "#009edb",
   },
   {
-    slug: "professional-development",
-    name: "Professional Development",
-    description: "Programmes that help members grow their careers, develop leadership skills, and apply their professional expertise in service to others.",
-    long_description: "Professional Development recognises that great service comes from skilled, confident people. Through workshops, mentoring, networking events, and opportunities to apply professional skills in club projects, this avenue helps Rotaractors become the leaders their communities need.\n\nWe believe in growing ourselves so we can grow others. Professional Development is where service and personal ambition unite.",
-    icon: Briefcase,
-    color: "#f7a81b",
-  },
-  {
-    slug: "service-to-clubs",
-    name: "Service to Clubs",
-    description: "Efforts to strengthen relationships with our parent Rotary club, sponsor clubs, and other Rotaract clubs — building a broader network of service.",
-    long_description: "Service to Clubs strengthens the bonds between Rotaractors and the wider Rotary family. By collaborating with our parent Rotary club, participating in District events, and supporting fellow Rotaract clubs, we amplify our collective impact and grow the movement of young service leaders.\n\nNo club succeeds alone. Service to Clubs is how we stay connected to the global network that makes our local work possible.",
-    icon: Handshake,
+    slug: "new-generations-service",
+    name: "New Generations Service",
+    avenue: "Fifth Avenue of Service",
+    description: "New Generations Service works to engage youths and young adults in leadership roles.",
+    long_description: "New Generations Service works to engage youths and young adults in leadership roles. Rotary Youth Leadership Awards (RYLA) is a training program for young people, ages 14 to 30. The award emphasizes leadership and citizenship.\n\nRotaract is an International Youth Program is for ages 18 to 30 while Interact focuses on international service for youths 12 to 18.\n\nIn April 2010, representatives at the Council on Legislation met in Chicago, USA and approved New Generations as the Fifth Avenue of Service in Rotary. The news of the Council's decision was welcomed with excitement and enthusiasm by Rotarians across the globe since this would create impetus in synergy between Rotarians and Rotaractors.",
+    icon: GraduationCap,
     color: "#2e7d32",
   },
 ];
@@ -92,6 +97,9 @@ export default async function AvenueDetailPage({ params }: { params: Promise<{ s
               <div className="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
                 <IconComponent className="h-6 w-6 text-white" />
               </div>
+              <Badge className="bg-white/20 text-white border-white/30">
+                {avenue.avenue}
+              </Badge>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">{avenue.name}</h1>
             <p className="text-lg text-white/80 max-w-2xl">{avenue.description}</p>

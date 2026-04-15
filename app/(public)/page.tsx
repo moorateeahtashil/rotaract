@@ -14,7 +14,7 @@ export const metadata = {
 };
 
 // ─── HERO SECTION ───
-function HeroSection({ section, tagline, heroBannerUrl }: { section: any; tagline?: string; heroBannerUrl?: string }) {
+function HeroSection({ section, tagline, clubName, heroBannerUrl }: { section: any; tagline?: string; clubName?: string; heroBannerUrl?: string }) {
   const bannerImage = heroBannerUrl || section?.image_url;
   return (
     <section className="relative min-h-[80vh] flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
@@ -36,10 +36,10 @@ function HeroSection({ section, tagline, heroBannerUrl }: { section: any; taglin
             <span className="text-sm font-medium">{tagline || "Service Above Self"}</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            {section?.subtitle || "Empowering Young Leaders"}
+            {clubName || "Empowering Young Leaders"}
           </h1>
           <p className="text-lg sm:text-xl text-white/90 mb-10 leading-relaxed max-w-2xl">
-            {section?.subtitle || section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
+            {section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             {section?.cta_label && (
@@ -574,14 +574,14 @@ export default async function HomePage() {
   const settings = await getSiteSettings();
   const getS = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
   const clubName = getS("club_name") || "Rotaract Club";
-  const tagline = getS("site_tagline");
+  const tagline = getS("club_tagline");
   const heroBannerUrl = getS("hero_banner_url");
 
   // If no sections exist in DB, show default layout
   if (sections.length === 0) {
     return (
       <>
-        <HeroSection section={null} tagline={tagline} heroBannerUrl={heroBannerUrl} />
+        <HeroSection section={null} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} />
         <MeetingInfoSection section={null} />
         <WhatIsRotarySection />
         <UpcomingEventsSection section={null} />
@@ -601,7 +601,7 @@ export default async function HomePage() {
       {sections.map((section: any) => {
         switch (section.section_type) {
           case 'hero':
-            return <HeroSection key={section.id} section={section} tagline={tagline} heroBannerUrl={heroBannerUrl} />;
+            return <HeroSection key={section.id} section={section} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} />;
           case 'meeting_info':
             return <MeetingInfoSection key={section.id} section={section} />;
           case 'stats':
