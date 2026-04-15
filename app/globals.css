@@ -42,6 +42,14 @@
   --color-input: #d0cfcd;
   --color-ring: #17458f;
 
+  /* Toast notification colors */
+  --color-toast-success: #009739;
+  --color-toast-success-bg: #f0faf4;
+  --color-toast-error: #e02927;
+  --color-toast-error-bg: #fff1f1;
+  --color-toast-warning: #f7a81b;
+  --color-toast-warning-bg: #fffbeb;
+
   /* Chart colors */
   --color-chart-1: #17458f;
   --color-chart-2: #0067c8;

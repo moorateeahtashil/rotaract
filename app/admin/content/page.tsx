@@ -125,7 +125,7 @@ export default function AdminContentPage() {
           });
       }
 
-      toast({ title: "Saved", description: `${pageData.title} has been updated.` });
+      toast({ variant: "success", title: "Saved", description: `${pageData.title} has been updated.` });
       await loadContent();
     } catch (error: any) {
       toast({

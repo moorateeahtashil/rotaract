@@ -77,7 +77,7 @@ export default function EventTypesPage() {
           .update({ name: form.name, description: form.description, color_hex: form.color_hex })
           .eq("id", editing.id);
         if (error) throw error;
-        toast({ title: "Updated", description: `"${form.name}" has been updated.` });
+        toast({ variant: "success", title: "Updated", description: `"${form.name}" has been updated.` });
       } else {
         const { error } = await supabase.from("event_types").insert({
           name: form.name,
@@ -87,7 +87,7 @@ export default function EventTypesPage() {
           sort_order: types.length,
         });
         if (error) throw error;
-        toast({ title: "Created", description: `"${form.name}" event type created.` });
+        toast({ variant: "success", title: "Created", description: `"${form.name}" event type created.` });
       }
       setDialogOpen(false);
       await load();
@@ -110,7 +110,7 @@ export default function EventTypesPage() {
       .from("event_types")
       .update({ deleted_at: new Date().toISOString(), is_active: false })
       .eq("id", type.id);
-    toast({ title: "Deleted", description: `"${type.name}" has been removed.` });
+    toast({ variant: "success", title: "Deleted", description: `"${type.name}" has been removed.` });
     setDeleteDialog({ open: false });
     await load();
   }

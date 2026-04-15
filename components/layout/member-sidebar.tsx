@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   User,
   Calendar,
-  KeyRound,
   Megaphone,
   Users,
   FileText,
@@ -20,7 +19,6 @@ const MEMBER_NAV = [
   { label: "Dashboard", href: "/member", icon: LayoutDashboard },
   { label: "My Profile", href: "/member/profile", icon: User },
   { label: "My Events", href: "/member/events", icon: Calendar },
-  { label: "My Bookings", href: "/member/bookings", icon: KeyRound },
   {
     label: "Announcements",
     href: "/member/announcements",

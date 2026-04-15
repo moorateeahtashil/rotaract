@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, Info } from "lucide-react";
 
 type SettingsMap = Record<string, string>;
 
@@ -19,13 +19,16 @@ const SOCIAL_KEYS = [
   "social_facebook", "social_instagram", "social_twitter",
   "social_linkedin", "social_youtube", "social_whatsapp",
 ];
+const MEETING_KEYS = ["meeting_day", "meeting_time", "meeting_location", "meeting_date"];
 
 export default function AdminSettingsPage() {
   const supabase = createClient() as any;
   const { toast } = useToast();
   const [settings, setSettings] = useState<SettingsMap>({});
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function AdminSettingsPage() {
       (data || []).forEach((r: any) => (map[r.key] = r.value));
       setSettings(map);
       setLogoUrl(map["site_logo_url"] || "");
+      setHeroBannerUrl(map["hero_banner_url"] || "");
     }
     load();
   }, []);
@@ -49,19 +53,23 @@ export default function AdminSettingsPage() {
     setSaving(groupLabel);
     try {
       const META: Record<string, { label: string; group_key: string; description?: string }> = {
-        club_name:      { label: "Club Name",           group_key: "general" },
-        site_tagline:   { label: "Site Tagline",        group_key: "general" },
-        contact_email:  { label: "Contact Email",       group_key: "contact" },
-        contact_phone:  { label: "Contact Phone",       group_key: "contact" },
-        contact_address:{ label: "Club Address",        group_key: "contact" },
-        footer_tagline: { label: "Footer Tagline",      group_key: "footer" },
-        footer_about:   { label: "Footer About",        group_key: "footer" },
-        social_facebook:  { label: "Facebook URL",      group_key: "social" },
-        social_instagram: { label: "Instagram URL",     group_key: "social" },
-        social_twitter:   { label: "Twitter/X URL",     group_key: "social" },
-        social_linkedin:  { label: "LinkedIn URL",      group_key: "social" },
-        social_youtube:   { label: "YouTube URL",       group_key: "social" },
-        social_whatsapp:  { label: "WhatsApp URL",      group_key: "social" },
+        club_name:        { label: "Club Name",           group_key: "general" },
+        site_tagline:     { label: "Site Tagline",        group_key: "general" },
+        contact_email:    { label: "Contact Email",       group_key: "contact" },
+        contact_phone:    { label: "Contact Phone",       group_key: "contact" },
+        contact_address:  { label: "Club Address",        group_key: "contact" },
+        footer_tagline:   { label: "Footer Tagline",      group_key: "footer" },
+        footer_about:     { label: "Footer About",        group_key: "footer" },
+        social_facebook:  { label: "Facebook URL",        group_key: "social" },
+        social_instagram: { label: "Instagram URL",       group_key: "social" },
+        social_twitter:   { label: "Twitter/X URL",       group_key: "social" },
+        social_linkedin:  { label: "LinkedIn URL",        group_key: "social" },
+        social_youtube:   { label: "YouTube URL",         group_key: "social" },
+        social_whatsapp:  { label: "WhatsApp URL",        group_key: "social" },
+        meeting_day:      { label: "Meeting Day/Schedule", group_key: "meeting" },
+        meeting_time:     { label: "Meeting Time",        group_key: "meeting" },
+        meeting_location: { label: "Meeting Location",    group_key: "meeting" },
+        meeting_date:     { label: "Next Meeting Date",   group_key: "meeting" },
       };
 
       const rows = keys.map((key) => ({
@@ -77,7 +85,7 @@ export default function AdminSettingsPage() {
         .from("site_settings")
         .upsert(rows, { onConflict: "key" });
       if (error) throw error;
-      toast({ title: "Saved", description: `${groupLabel} settings updated.` });
+      toast({ variant: "success", title: "Saved", description: `${groupLabel} settings updated.` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
@@ -85,20 +93,86 @@ export default function AdminSettingsPage() {
     }
   }
 
-  async function onUploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onUploadHeroBanner(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingBanner(true);
     try {
-      const ext = file.name.split(".").pop() || "png";
-      const path = `logos/site-logo-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("public").upload(path, file, {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `hero-banner-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("banners").upload(path, file, {
         cacheControl: "3600",
         upsert: true,
       });
       if (upErr) throw upErr;
 
-      const { data: pub } = supabase.storage.from("public").getPublicUrl(path);
+      const { data: pub } = supabase.storage.from("banners").getPublicUrl(path);
+      const publicUrl = pub?.publicUrl as string;
+
+      const { error: setErr } = await supabase.from("site_settings").upsert(
+        {
+          key: "hero_banner_url",
+          value: publicUrl,
+          value_type: "string",
+          group_key: "branding",
+          label: "Hero Banner URL",
+          is_public: true,
+        },
+        { onConflict: "key" }
+      );
+      if (setErr) throw setErr;
+
+      setHeroBannerUrl(publicUrl);
+      update("hero_banner_url", publicUrl);
+      toast({ variant: "success", title: "Banner uploaded", description: "Hero banner has been updated." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Upload failed", description: e.message });
+    } finally {
+      setUploadingBanner(false);
+    }
+  }
+
+  async function resizeLogo(file: File, targetHeight = 72): Promise<{ blob: Blob; ext: string }> {
+    const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+    if (isSvg) return { blob: file, ext: "svg" };
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const ratio = targetHeight / img.naturalHeight;
+        const width = Math.round(img.naturalWidth * ratio);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, width, targetHeight);
+        ctx.drawImage(img, 0, 0, width, targetHeight);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve({ blob, ext: "png" });
+          else reject(new Error("Image conversion failed"));
+        }, "image/png");
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+      img.src = url;
+    });
+  }
+
+  async function onUploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { blob, ext } = await resizeLogo(file);
+      const path = `site-logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("logos").upload(path, blob, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: ext === "svg" ? "image/svg+xml" : "image/png",
+      });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
       const publicUrl = pub?.publicUrl as string;
 
       const { error: setErr } = await supabase.from("site_settings").upsert(
@@ -116,7 +190,7 @@ export default function AdminSettingsPage() {
 
       setLogoUrl(publicUrl);
       update("site_logo_url", publicUrl);
-      toast({ title: "Logo uploaded", description: "Site logo has been updated." });
+      toast({ variant: "success", title: "Logo uploaded", description: "Site logo has been resized and updated." });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Upload failed", description: e.message });
     } finally {
@@ -132,9 +206,10 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs defaultValue="general">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="meeting">Next Meeting</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
           <TabsTrigger value="social">Social Media</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
@@ -183,7 +258,7 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="text-base">Branding</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
                 <Label>Site Logo</Label>
                 <div className="mt-2 flex items-center gap-4">
@@ -203,9 +278,93 @@ export default function AdminSettingsPage() {
                     className="max-w-xs"
                   />
                 </div>
-                {uploading && <p className="text-xs text-pewter">Uploading...</p>}
-                <p className="text-xs text-pewter mt-1">Recommended: transparent PNG or SVG, height ~36px</p>
+                {uploading && <p className="text-xs text-pewter mt-1">Resizing &amp; uploading...</p>}
+                <div className="flex items-start gap-1.5 mt-2 rounded-md bg-rotary-blue/5 border border-rotary-blue/20 px-3 py-2 text-xs text-rotary-blue">
+                  <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                  <span>PNG and JPG images are automatically resized to 72 px tall (2× retina). SVG files are uploaded as-is and scale perfectly at any size.</span>
+                </div>
               </div>
+
+              <div className="border-t border-border pt-5">
+                <Label>Hero / Banner Image</Label>
+                <p className="text-xs text-pewter mt-0.5 mb-2">
+                  Displayed as the background image on the homepage hero section. Recommended: 1920×1080px.
+                </p>
+                <div className="mt-2 space-y-3">
+                  {heroBannerUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={heroBannerUrl}
+                      alt="Hero banner preview"
+                      className="w-full max-w-lg h-36 object-cover rounded-lg border border-border"
+                    />
+                  )}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={onUploadHeroBanner}
+                    disabled={uploadingBanner}
+                    className="max-w-xs"
+                  />
+                </div>
+                {uploadingBanner && <p className="text-xs text-pewter mt-1">Uploading...</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Next Meeting */}
+        <TabsContent value="meeting">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Next Meeting Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Meeting Schedule / Day</Label>
+                <Input
+                  className="mt-1"
+                  value={settings["meeting_day"] || ""}
+                  onChange={(e) => update("meeting_day", e.target.value)}
+                  placeholder="e.g. Every other Monday"
+                />
+                <p className="text-xs text-pewter mt-1">Displayed on the homepage "Next Meeting" block.</p>
+              </div>
+              <div>
+                <Label>Next Meeting Date</Label>
+                <Input
+                  className="mt-1"
+                  type="date"
+                  value={settings["meeting_date"] || ""}
+                  onChange={(e) => update("meeting_date", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Meeting Time</Label>
+                <Input
+                  className="mt-1"
+                  value={settings["meeting_time"] || ""}
+                  onChange={(e) => update("meeting_time", e.target.value)}
+                  placeholder="e.g. 7:00 PM"
+                />
+              </div>
+              <div>
+                <Label>Meeting Location</Label>
+                <Input
+                  className="mt-1"
+                  value={settings["meeting_location"] || ""}
+                  onChange={(e) => update("meeting_location", e.target.value)}
+                  placeholder="e.g. Community Hall, 123 Main St"
+                />
+              </div>
+              <Button
+                onClick={() => saveGroup(MEETING_KEYS, "Meeting")}
+                disabled={saving === "Meeting"}
+                className="bg-rotary-blue hover:bg-rotary-blue/90"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saving === "Meeting" ? "Saving..." : "Save Meeting Info"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

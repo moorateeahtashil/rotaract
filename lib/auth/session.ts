@@ -158,6 +158,7 @@ export const MEMBER_ROLES: string[] = [
   "admin",
   "board_member",
   "member",
+  "prospective_member",
   // Legacy board roles
   "president",
   "secretary",

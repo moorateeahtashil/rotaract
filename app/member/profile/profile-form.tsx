@@ -124,7 +124,7 @@ export function ProfileForm({
         .eq("user_id", profile?.user_id);
 
       setAvatarUrl(url);
-      toast({ title: "Photo updated" });
+      toast({ variant: "success", title: "Photo updated" });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Upload failed", description: e.message });
     } finally {
@@ -174,7 +174,7 @@ export function ProfileForm({
         if (memberError) throw memberError;
       }
 
-      toast({ title: "Profile updated", description: "Your changes have been saved." });
+      toast({ variant: "success", title: "Profile updated", description: "Your changes have been saved." });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message || "Failed to save profile" });
     } finally {

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, LogOut, Settings, ArrowLeft } from "lucide-react";
+import { Bell, LogOut, Settings, ArrowLeft, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
 export function AdminTopbar() {
@@ -33,6 +33,13 @@ export function AdminTopbar() {
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="hidden sm:inline">View Site</span>
+        </Link>
+        <Link
+          href="/member"
+          className="flex items-center gap-2 text-sm text-pewter hover:text-rotary-blue transition-colors"
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          <span className="hidden sm:inline">Member Portal</span>
         </Link>
       </div>
 

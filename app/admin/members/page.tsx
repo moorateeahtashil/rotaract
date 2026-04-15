@@ -140,7 +140,7 @@ export default function AdminMembersPage() {
         { onConflict: "user_id,role" }
       );
       if (error) throw error;
-      toast({ title: "Role assigned", description: `${selectedUser.first_name} is now a ${newRole}` });
+      toast({ variant: "success", title: "Role assigned", description: `${selectedUser.first_name} is now a ${newRole}` });
       setRoleDialogOpen(false);
       await loadUsers();
     } catch (e: any) {
@@ -187,7 +187,7 @@ export default function AdminMembersPage() {
           .eq("user_id", user.user_id);
       }
 
-      toast({ title: "Approved!", description: `${user.first_name} ${user.last_name} is now a member.` });
+      toast({ variant: "success", title: "Approved!", description: `${user.first_name} ${user.last_name} is now a member.` });
       setApproveDialog({ open: false });
       await loadUsers();
     } catch (e: any) {
@@ -210,7 +210,7 @@ export default function AdminMembersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create member");
 
-      toast({ title: "Invited!", description: `An invitation has been sent to ${createForm.email}` });
+      toast({ variant: "success", title: "Invited!", description: `An invitation has been sent to ${createForm.email}` });
       setCreateDialogOpen(false);
       setCreateForm({ first_name: "", last_name: "", email: "", role: "member" });
       await loadUsers();

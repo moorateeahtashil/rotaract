@@ -45,10 +45,10 @@ export default function SetupAdminPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      toast({ title: "Role Assigned", description: `${userName} is now a ${role.replace("_", " ")}.` });
+      toast({ variant: "success", title: "Role Assigned", description: `${userName} is now a ${role.replace("_", " ")}.` });
       loadUsers();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ variant: "success", title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setProcessing(null);
     }

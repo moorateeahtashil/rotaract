@@ -16,10 +16,9 @@ export default async function MemberResourcesPage() {
   const supabase = await createServerClient() as any;
 
   const { data: resources } = await supabase
-    .from("resources")
+    .from("documents")
     .select("*")
     .eq("is_active", true)
-    .is("deleted_at", null)
     .in("access_level", ["public", "member_only"])
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
@@ -79,7 +78,6 @@ export default async function MemberResourcesPage() {
                       )}
                       <div className="flex items-center gap-3 mt-1 text-xs text-pewter">
                         {resource.file_type && <span className="uppercase">{resource.file_type}</span>}
-                        {resource.file_size_bytes && <span>{formatFileSize(resource.file_size_bytes)}</span>}
                         <span>{formatDate(resource.created_at)}</span>
                       </div>
                     </div>

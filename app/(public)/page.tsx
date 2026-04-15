@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getHomepageSections, getFeaturedProjects, getUpcomingEvents, getBoardMembers, getPosts, getSponsorClub, getAvenues, getSiteSettings } from "@/lib/db/queries";
+import { getHomepageSections, getFeaturedProjects, getUpcomingEvents, getBoardMembers, getPosts, getSponsorClub, getSiteSettings } from "@/lib/db/queries";
 import { ArrowRight, Users, Calendar, Heart, MapPin, Clock, Rss, Globe, FolderKanban } from "lucide-react";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,8 @@ export const metadata = {
 };
 
 // ─── HERO SECTION ───
-function HeroSection({ section, logoUrl }: { section: any; logoUrl?: string }) {
+function HeroSection({ section, logoUrl, heroBannerUrl }: { section: any; logoUrl?: string; heroBannerUrl?: string }) {
+  const bannerImage = heroBannerUrl || section?.image_url;
   return (
     <section className="relative min-h-[80vh] flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
       {/* Animated background elements */}
@@ -21,10 +22,10 @@ function HeroSection({ section, logoUrl }: { section: any; logoUrl?: string }) {
         <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] bg-rotary-gold/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] bg-sky-blue/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
-      
+
       <div className="absolute inset-0 bg-black/10" />
-      {section?.image_url && (
-        <img src={section.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+      {bannerImage && (
+        <img src={bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
       )}
       
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
@@ -121,11 +122,17 @@ async function UpcomingEventsSection({ section }: { section: any }) {
   );
 }
 
-// ─── AVENUES ───
-async function AvenuesSection({ section }: { section: any }) {
-  const avenues = await getAvenues();
-  if (avenues.length === 0) return null; // Hide if empty
+// Hardcoded Five Avenues of Service
+const HARDCODED_AVENUES = [
+  { slug: "club-service", name: "Club Service", description: "Strengthen the club through member development, fellowship, and leadership.", icon: "🤝" },
+  { slug: "community-service", name: "Community Service", description: "Address local needs through hands-on projects in education, health, and environment.", icon: "❤️" },
+  { slug: "international-service", name: "International Service", description: "Foster international understanding, peace, and goodwill across borders.", icon: "🌍" },
+  { slug: "professional-development", name: "Professional Development", description: "Grow careers, leadership skills, and apply professional expertise in service.", icon: "💼" },
+  { slug: "service-to-clubs", name: "Service to Clubs", description: "Strengthen relationships with Rotary clubs and the broader Rotaract network.", icon: "🌐" },
+];
 
+// ─── AVENUES ───
+function AvenuesSection({ section }: { section: any }) {
   return (
     <section className="py-16 sm:py-20 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -135,20 +142,20 @@ async function AvenuesSection({ section }: { section: any }) {
             <p className="text-pewter mt-2 max-w-2xl mx-auto">{section.subtitle}</p>
           ) : (
             <p className="text-pewter mt-2 max-w-2xl mx-auto">
-              Six pathways through which Rotaractors serve their communities and grow as leaders
+              Five pathways through which Rotaractors serve their communities and grow as leaders
             </p>
           )}
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {avenues.slice(0, 6).map((avenue: any) => (
+          {HARDCODED_AVENUES.map((avenue) => (
             <Link
-              key={avenue.id}
+              key={avenue.slug}
               href={`/avenues-of-service/${avenue.slug}`}
               className="group p-6 rounded-xl border-2 border-border/50 hover:border-rotary-blue/40 hover:shadow-xl transition-all duration-200 bg-white"
             >
               <div className="flex items-start gap-4">
                 <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center flex-shrink-0 group-hover:from-rotary-blue/20 group-hover:to-azure/20 transition-colors">
-                  <span className="text-2xl">{avenue.icon_key || '🎯'}</span>
+                  <span className="text-2xl">{avenue.icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-charcoal mb-1 group-hover:text-rotary-blue transition-colors truncate">
@@ -551,13 +558,15 @@ async function MeetingInfoSection({ section }: { section: any }) {
 export default async function HomePage() {
   const sections = await getHomepageSections();
   const settings = await getSiteSettings();
-  const logoUrl = (settings as any[]).find((s: any) => s.key === "logo_url")?.value || "";
+  const getS = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
+  const logoUrl = getS("site_logo_url") || getS("logo_url");
+  const heroBannerUrl = getS("hero_banner_url");
 
   // If no sections exist in DB, show default layout
   if (sections.length === 0) {
     return (
       <>
-        <HeroSection section={null} logoUrl={logoUrl} />
+        <HeroSection section={null} logoUrl={logoUrl} heroBannerUrl={heroBannerUrl} />
         <MeetingInfoSection section={null} />
         <WhatIsRotarySection />
         <UpcomingEventsSection section={null} />
@@ -577,7 +586,7 @@ export default async function HomePage() {
       {sections.map((section: any) => {
         switch (section.section_type) {
           case 'hero':
-            return <HeroSection key={section.id} section={section} logoUrl={logoUrl} />;
+            return <HeroSection key={section.id} section={section} logoUrl={logoUrl} heroBannerUrl={heroBannerUrl} />;
           case 'meeting_info':
             return <MeetingInfoSection key={section.id} section={section} />;
           case 'stats':

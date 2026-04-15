@@ -20,7 +20,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Users, RefreshCw, Wallet } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/db/browser-client";
 
 type Committee = {
@@ -28,14 +28,9 @@ type Committee = {
   name: string;
   slug: string;
   description?: string;
-  avenue_id?: string;
   chair_member_id?: string;
-  wallet_address?: string;
   is_active: boolean;
-  sort_order: number;
   chair_name?: string;
-  avenue_name?: string;
-  member_count?: number;
 };
 
 type BoardMemberOption = {
@@ -43,27 +38,19 @@ type BoardMemberOption = {
   name: string;
 };
 
-type AvenueOption = {
-  id: string;
-  name: string;
-};
 
 const EMPTY_FORM = {
   name: "",
   slug: "",
   description: "",
-  avenue_id: "",
   chair_member_id: "",
-  wallet_address: "",
   is_active: true,
-  sort_order: 0,
 };
 
 export default function AdminCommitteesPage() {
   const { toast } = useToast();
   const [committees, setCommittees] = useState<Committee[]>([]);
   const [boardMembers, setBoardMembers] = useState<BoardMemberOption[]>([]);
-  const [avenues, setAvenues] = useState<AvenueOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,49 +65,33 @@ export default function AdminCommitteesPage() {
     const [
       { data: committeesData },
       { data: boardData },
-      { data: avenuesData },
     ] = await Promise.all([
       supabase
         .from("committees")
         .select(`
-          id, name, slug, description, avenue_id, chair_member_id,
-          wallet_address, is_active, sort_order,
-          avenue:avenues(name),
-          chair:members(
+          id, name, slug, description, chair_member_id, is_active,
+          chair:members!chair_member_id(
+            id,
             profile:profiles(first_name, last_name)
           )
         `)
         .is("deleted_at", null)
-        .order("sort_order"),
+        .order("name"),
 
       supabase
         .from("board_members")
         .select(`
           member_id,
+          custom_title,
+          position:board_positions(title),
           member:members(
+            id,
             profile:profiles(first_name, last_name)
           )
         `)
-        .is("deleted_at", null),
-
-      supabase
-        .from("avenues")
-        .select("id, name")
-        .eq("is_active", true)
         .is("deleted_at", null)
-        .order("sort_order"),
+        .eq("is_visible", true),
     ]);
-
-    // Get member counts per committee
-    const { data: memberCounts } = await supabase
-      .from("committee_members")
-      .select("committee_id")
-      .eq("is_active", true);
-
-    const countMap: Record<string, number> = {};
-    (memberCounts || []).forEach((m: any) => {
-      countMap[m.committee_id] = (countMap[m.committee_id] || 0) + 1;
-    });
 
     setCommittees(
       (committeesData || []).map((c: any) => ({
@@ -128,8 +99,6 @@ export default function AdminCommitteesPage() {
         chair_name: c.chair?.profile
           ? `${c.chair.profile.first_name} ${c.chair.profile.last_name}`
           : undefined,
-        avenue_name: c.avenue?.name,
-        member_count: countMap[c.id] || 0,
       }))
     );
 
@@ -145,12 +114,11 @@ export default function AdminCommitteesPage() {
         .map((b: any) => ({
           member_id: b.member_id,
           name: b.member?.profile
-            ? `${b.member.profile.first_name} ${b.member.profile.last_name}`
+            ? `${b.member.profile.first_name} ${b.member.profile.last_name} — ${b.custom_title || b.position?.title || "Board Member"}`
             : b.member_id,
         }))
     );
 
-    setAvenues((avenuesData || []).map((a: any) => ({ id: a.id, name: a.name })));
     setLoading(false);
   }, []);
 
@@ -168,11 +136,8 @@ export default function AdminCommitteesPage() {
       name: c.name,
       slug: c.slug,
       description: c.description || "",
-      avenue_id: c.avenue_id || "",
       chair_member_id: c.chair_member_id || "",
-      wallet_address: c.wallet_address || "",
       is_active: c.is_active,
-      sort_order: c.sort_order,
     });
     setDialogOpen(true);
   }
@@ -198,11 +163,9 @@ export default function AdminCommitteesPage() {
       name: form.name.trim(),
       slug: form.slug.trim() || autoSlug(form.name),
       description: form.description.trim() || null,
-      avenue_id: form.avenue_id || null,
       chair_member_id: form.chair_member_id || null,
-      wallet_address: form.wallet_address.trim() || null,
       is_active: form.is_active,
-      sort_order: Number(form.sort_order),
+      updated_at: new Date().toISOString(),
     };
 
     try {
@@ -212,11 +175,11 @@ export default function AdminCommitteesPage() {
           .update(payload)
           .eq("id", editing.id);
         if (error) throw error;
-        toast({ title: "Updated", description: `${payload.name} has been updated.` });
+        toast({ variant: "success", title: "Updated", description: `${payload.name} has been updated.` });
       } else {
         const { error } = await supabase.from("committees").insert(payload);
         if (error) throw error;
-        toast({ title: "Created", description: `${payload.name} has been created.` });
+        toast({ variant: "success", title: "Created", description: `${payload.name} has been created.` });
       }
       setDialogOpen(false);
       await loadData();
@@ -237,7 +200,7 @@ export default function AdminCommitteesPage() {
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", deleteDialog.id);
       if (error) throw error;
-      toast({ title: "Deleted", description: `${deleteDialog.name} has been removed.` });
+      toast({ variant: "success", title: "Deleted", description: `${deleteDialog.name} has been removed.` });
       setDeleteDialog({ open: false });
       await loadData();
     } catch (e: any) {
@@ -291,27 +254,13 @@ export default function AdminCommitteesPage() {
                         {!c.is_active && (
                           <Badge variant="outline" className="text-xs text-pewter">Inactive</Badge>
                         )}
-                        {c.avenue_name && (
-                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                            {c.avenue_name}
-                          </Badge>
-                        )}
                       </div>
                       {c.description && (
                         <p className="text-sm text-pewter mt-0.5 truncate max-w-md">{c.description}</p>
                       )}
-                      <div className="flex items-center gap-4 mt-1 text-xs text-pewter">
-                        {c.chair_name && (
-                          <span>Chair: <span className="text-charcoal">{c.chair_name}</span></span>
-                        )}
-                        {c.wallet_address && (
-                          <span className="flex items-center gap-1">
-                            <Wallet className="h-3 w-3" />
-                            {c.wallet_address.slice(0, 8)}…{c.wallet_address.slice(-6)}
-                          </span>
-                        )}
-                        <span>{c.member_count} member{c.member_count !== 1 ? "s" : ""}</span>
-                      </div>
+                      {c.chair_name && (
+                        <p className="text-xs text-rotary-blue mt-1 font-medium">Chair: {c.chair_name}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
@@ -384,74 +333,30 @@ export default function AdminCommitteesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Linked Avenue</Label>
-                <Select
-                  value={form.avenue_id}
-                  onValueChange={(v) => setForm({ ...form, avenue_id: v === "__none" ? "" : v })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none">None</SelectItem>
-                    {avenues.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Chair (Board Member)</Label>
-                <Select
-                  value={form.chair_member_id}
-                  onValueChange={(v) => setForm({ ...form, chair_member_id: v === "__none" ? "" : v })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none">None</SelectItem>
-                    {boardMembers.map((b) => (
-                      <SelectItem key={b.member_id} value={b.member_id}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
             <div>
-              <Label className="flex items-center gap-1">
-                <Wallet className="h-3.5 w-3.5" /> Chair Wallet Address
-              </Label>
-              <Input
-                className="mt-1 font-mono text-sm"
-                value={form.wallet_address}
-                onChange={(e) => setForm({ ...form, wallet_address: e.target.value })}
-                placeholder="0x... or wallet address"
-              />
-              <p className="text-xs text-pewter mt-1">Optional. The wallet associated with this committee's chair.</p>
+              <Label>Chair <span className="text-pewter text-xs font-normal">(must be a current Board Member)</span></Label>
+              <Select
+                value={form.chair_member_id}
+                onValueChange={(v) => setForm({ ...form, chair_member_id: v === "__none" ? "" : v })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select board member as chair" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">— No chair assigned —</SelectItem>
+                  {boardMembers.map((b) => (
+                    <SelectItem key={b.member_id} value={b.member_id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Sort Order</Label>
-                <Input
-                  type="number"
-                  className="mt-1"
-                  value={form.sort_order}
-                  onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
-                />
-              </div>
-              <div className="flex items-center gap-3 pt-6">
-                <Switch
-                  checked={form.is_active}
-                  onCheckedChange={(v) => setForm({ ...form, is_active: v })}
-                />
-                <Label>Active</Label>
-              </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={form.is_active}
+                onCheckedChange={(v) => setForm({ ...form, is_active: v })}
+              />
+              <Label>Active</Label>
             </div>
           </div>
 

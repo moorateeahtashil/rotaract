@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Settings,
-  Compass,
   FileText,
   Users,
   Calendar,
@@ -17,13 +16,9 @@ import {
   HelpCircle,
   Handshake,
   Download,
-  KeyRound,
-  Mail,
-  Bell,
   BarChart3,
   Shield,
   ScrollText,
-  ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -46,7 +41,7 @@ const ADMIN_NAV = [
     category: "People",
     items: [
       { label: "Members", href: "/admin/members", icon: Users },
-      { label: "Board", href: "/admin/board", icon: Shield },
+      { label: "Board Members", href: "/admin/board", icon: Shield },
       { label: "Committees", href: "/admin/committees", icon: Users },
     ],
   },
@@ -54,9 +49,7 @@ const ADMIN_NAV = [
     category: "Program",
     items: [
       { label: "Events", href: "/admin/events", icon: Calendar },
-      { label: "Event Types", href: "/admin/event-types", icon: FileText },
       { label: "Projects", href: "/admin/projects", icon: FolderKanban },
-      { label: "Avenues", href: "/admin/avenues", icon: Compass },
       { label: "News", href: "/admin/news", icon: Newspaper },
     ],
   },
@@ -67,14 +60,6 @@ const ADMIN_NAV = [
       { label: "Resources", href: "/admin/resources", icon: Download },
       { label: "FAQs", href: "/admin/faq", icon: HelpCircle },
       { label: "Sponsors", href: "/admin/sponsors", icon: Handshake },
-    ],
-  },
-  {
-    category: "Operations",
-    items: [
-      { label: "Bookings", href: "/admin/bookings", icon: KeyRound },
-      { label: "Emails", href: "/admin/emails", icon: Mail },
-      { label: "Reminders", href: "/admin/reminders", icon: Bell },
     ],
   },
   {
