@@ -38,7 +38,7 @@ function HeroSection({ section, tagline, heroBannerUrl }: { section: any; taglin
             {section?.subtitle || "Empowering Young Leaders"}
           </h1>
           <p className="text-lg sm:text-xl text-white/90 mb-10 leading-relaxed max-w-2xl">
-            {section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
+            {section?.subtitle || section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             {section?.cta_label && (
@@ -554,6 +554,7 @@ export default async function HomePage() {
   const sections = await getHomepageSections();
   const settings = await getSiteSettings();
   const getS = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
+  const clubName = getS("club_name") || "Rotaract Club";
   const tagline = getS("site_tagline");
   const heroBannerUrl = getS("hero_banner_url");
 

@@ -127,7 +127,7 @@ export function RotaryLogo({
  * Simplified Rotaract Logo (for Rotaract clubs)
  * Uses Rotaract-specific branding
  */
-export function RotaractLogo({ 
+export function RotaractLogo({
   clubName = "Rotaract Club",
   logoUrl,
   href = "/",
