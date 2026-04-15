@@ -48,7 +48,7 @@ export default function SetupAdminPage() {
       toast({ variant: "success", title: "Role Assigned", description: `${userName} is now a ${role.replace("_", " ")}.` });
       loadUsers();
     } catch (error: any) {
-      toast({ variant: "success", title: "Error", description: error.message, variant: "destructive" });
+      toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
       setProcessing(null);
     }
