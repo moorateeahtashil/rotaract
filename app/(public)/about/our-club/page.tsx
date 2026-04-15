@@ -162,7 +162,7 @@ export default async function AboutOurClubPage() {
                 Join Us <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
+            <Button asChild variant="outline" size="lg" className="bg-white/10 text-white hover:bg-white/20 border-white/30">
               <Link href="/contact">Contact Us</Link>
             </Button>
           </div>

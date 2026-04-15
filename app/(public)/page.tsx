@@ -17,17 +17,17 @@ export const metadata = {
 function HeroSection({ section, tagline, clubName, heroBannerUrl }: { section: any; tagline?: string; clubName?: string; heroBannerUrl?: string }) {
   const bannerImage = heroBannerUrl || section?.image_url;
   return (
-    <section className="relative min-h-[80vh] flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
+    <section className="relative min-h-screen flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] bg-rotary-gold/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] bg-sky-blue/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      <div className="absolute inset-0 bg-black/10" />
       {bannerImage && (
-        <img src={bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+        <img src={bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
       )}
+      <div className="absolute inset-0 bg-rotary-blue/40" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
         <div className="max-w-4xl">
@@ -39,7 +39,7 @@ function HeroSection({ section, tagline, clubName, heroBannerUrl }: { section: a
             {clubName || "Empowering Young Leaders"}
           </h1>
           <p className="text-lg sm:text-xl text-white/90 mb-10 leading-relaxed max-w-2xl">
-            {section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
+            {tagline || section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             {section?.cta_label && (
@@ -253,33 +253,19 @@ async function BoardPreviewSection({ section }: { section: any }) {
 
 // ─── NEWS PREVIEW ───
 async function NewsPreviewSection({ section }: { section: any }) {
-  const [localPosts, rotaryNews] = await Promise.all([
-    getPosts({ limit: 3 }),
-    fetchRotaryRSSFeed(3),
-  ]);
+  const rotaryNews = await fetchRotaryRSSFeed(20);
 
-  const allItems = [
-    ...localPosts.slice(0, 3).map((post: any) => ({
-      title: post.title,
-      link: `/news/${post.slug}`,
-      description: post.excerpt || post.content?.substring(0, 200) || '',
-      date: post.published_at || post.created_at,
-      imageUrl: post.featured_image,
-      source: 'club' as const,
-      isLocal: true,
-    })),
-    ...rotaryNews.map((item: RotaryNewsItem) => ({
-      title: item.title,
-      link: item.link,
-      description: item.description,
-      date: item.pubDate,
-      imageUrl: item.imageUrl,
-      source: item.source,
-      isLocal: false,
-    })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+  const rotaryItems = rotaryNews.map((item: RotaryNewsItem) => ({
+    title: item.title,
+    link: item.link,
+    description: item.description,
+    date: item.pubDate,
+    imageUrl: item.imageUrl,
+    source: item.source,
+    isLocal: false,
+  }));
 
-  if (allItems.length === 0) return null; // Hide if empty
+  if (rotaryItems.length === 0) return null; // Hide if empty
 
   return (
     <section className="py-16 sm:py-20 bg-white">
@@ -291,7 +277,7 @@ async function NewsPreviewSection({ section }: { section: any }) {
               <p className="text-pewter mt-1">{section.subtitle}</p>
             ) : (
               <p className="text-pewter mt-1">
-                Latest news from our club and Rotary International
+                Latest news from Rotary International
               </p>
             )}
           </div>
@@ -301,45 +287,45 @@ async function NewsPreviewSection({ section }: { section: any }) {
                 <Rss className="mr-1.5 h-3.5 w-3.5" /> Rotary News
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="border-rotary-blue/30 text-rotary-blue hover:bg-rotary-blue/5 whitespace-nowrap h-9">
-              <Link href="/news">View All <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
-            </Button>
           </div>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allItems.map((item, index) => {
-            const CardWrapper = item.isLocal ? Link : 'a';
-            return (
-              <CardWrapper key={index} href={item.link} target={item.isLocal ? undefined : '_blank'} rel={item.isLocal ? undefined : 'noopener noreferrer'}>
+
+        {/* Horizontally scrollable Rotary news cards */}
+        <div className="px-6">
+          <HorizontalScroll>
+            {rotaryItems.map((item, index) => (
+              <a
+                key={index}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="snap-start flex-shrink-0 w-72 sm:w-80"
+              >
                 <Card className="hover:shadow-lg transition-shadow h-full group border-border">
                   <div className="relative bg-gradient-to-br from-rotary-blue/10 to-azure/10">
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.title} className="w-full aspect-video object-contain" />
                     ) : (
                       <div className="w-full aspect-video flex items-center justify-center">
-                        {item.isLocal ? (
-                          <Heart className="h-10 w-10 text-rotary-blue/30" />
-                        ) : (
-                          <Globe className="h-10 w-10 text-rotary-blue/30" />
-                        )}
+                        <Globe className="h-10 w-10 text-rotary-blue/30" />
                       </div>
                     )}
-                    <Badge className={`absolute top-2 right-2 text-xs ${item.isLocal ? 'bg-rotary-gold text-black' : 'bg-rotary-blue text-white'}`}>
-                      {item.isLocal ? 'Club News' : 'Rotary International'}
+                    <Badge className="absolute top-2 right-2 text-xs bg-rotary-blue text-white">
+                      Rotary International
                     </Badge>
                   </div>
                   <CardContent className="pt-4">
                     <h3 className="font-semibold text-charcoal mb-2 line-clamp-2 group-hover:text-rotary-blue transition-colors">{item.title}</h3>
                     <p className="text-xs text-pewter mb-2 line-clamp-2">{item.description}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-pewter">{item.isLocal ? formatDate(item.date) : formatRSSDate(item.date)}</span>
-                      {!item.isLocal && <ArrowRight className="h-4 w-4 text-rotary-blue group-hover:translate-x-1 transition-transform" />}
+                      <span className="text-xs text-pewter">{formatRSSDate(item.date)}</span>
+                      <ArrowRight className="h-4 w-4 text-rotary-blue group-hover:translate-x-1 transition-transform" />
                     </div>
                   </CardContent>
                 </Card>
-              </CardWrapper>
-            );
-          })}
+              </a>
+            ))}
+          </HorizontalScroll>
         </div>
       </div>
     </section>

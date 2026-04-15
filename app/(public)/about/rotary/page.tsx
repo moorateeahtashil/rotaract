@@ -138,7 +138,7 @@ export default function AboutRotaryPage() {
           {/* Seven Areas of Focus Image */}
           <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-lg border border-border">
             <img
-              src="/images/seven-areas-of-focus.png"
+              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/avenue.png`}
               alt="Seven Areas of Focus - Rotary International"
               className="w-full"
             />
