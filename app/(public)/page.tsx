@@ -312,15 +312,17 @@ async function NewsPreviewSection({ section }: { section: any }) {
             return (
               <CardWrapper key={index} href={item.link} target={item.isLocal ? undefined : '_blank'} rel={item.isLocal ? undefined : 'noopener noreferrer'}>
                 <Card className="hover:shadow-lg transition-shadow h-full group border-border">
-                  <div className="h-40 bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center relative overflow-hidden">
+                  <div className="relative bg-gradient-to-br from-rotary-blue/10 to-azure/10">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={item.imageUrl} alt={item.title} className="w-full aspect-video object-contain" />
                     ) : (
-                      item.isLocal ? (
-                        <Heart className="h-10 w-10 text-rotary-blue/30" />
-                      ) : (
-                        <Globe className="h-10 w-10 text-rotary-blue/30" />
-                      )
+                      <div className="w-full aspect-video flex items-center justify-center">
+                        {item.isLocal ? (
+                          <Heart className="h-10 w-10 text-rotary-blue/30" />
+                        ) : (
+                          <Globe className="h-10 w-10 text-rotary-blue/30" />
+                        )}
+                      </div>
                     )}
                     <Badge className={`absolute top-2 right-2 text-xs ${item.isLocal ? 'bg-rotary-gold text-black' : 'bg-rotary-blue text-white'}`}>
                       {item.isLocal ? 'Club News' : 'Rotary International'}
@@ -384,10 +386,10 @@ async function WhatIsRotarySection() {
                     <img
                       src={h.image_url}
                       alt={h.title}
-                      className="w-full h-40 object-cover"
+                      className="w-full aspect-video object-contain bg-white/5"
                     />
                   ) : (
-                    <div className="w-full h-40 bg-white/5 flex items-center justify-center">
+                    <div className="w-full aspect-video bg-white/5 flex items-center justify-center">
                       <Sparkles className="h-10 w-10 text-white/30" />
                     </div>
                   )}

@@ -75,12 +75,12 @@ async function NewsContent({ searchParams }: { searchParams: { category?: string
       {featuredPost && (
         <Card className="mb-8 overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="h-64 md:h-auto bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center">
+            <div className="bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center min-h-48 md:min-h-full">
               {featuredPost.featured_image ? (
                 <img
                   src={featuredPost.featured_image}
                   alt={featuredPost.title}
-                  className="w-full h-full object-cover"
+                  className="w-full aspect-video md:h-full md:aspect-auto object-contain"
                 />
               ) : (
                 <Newspaper className="h-16 w-16 text-rotary-blue/20" />
@@ -127,15 +127,17 @@ async function NewsContent({ searchParams }: { searchParams: { category?: string
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {regularPosts.map((post: any) => (
           <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            <div className="h-44 bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center relative">
+            <div className="bg-gradient-to-br from-rotary-blue/10 to-azure/10 relative">
               {post.featured_image ? (
                 <img
                   src={post.featured_image}
                   alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full aspect-video object-contain"
                 />
               ) : (
-                <Newspaper className="h-10 w-10 text-rotary-blue/20" />
+                <div className="w-full aspect-video flex items-center justify-center">
+                  <Newspaper className="h-10 w-10 text-rotary-blue/20" />
+                </div>
               )}
               {post.is_featured && (
                 <div className="absolute top-3 left-3">

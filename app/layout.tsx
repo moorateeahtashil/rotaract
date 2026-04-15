@@ -11,6 +11,11 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const faviconUrl = supabaseUrl
+  ? `${supabaseUrl}/storage/v1/object/public/logos/favicon.png`
+  : "/favicon.ico";
+
 export const metadata: Metadata = {
   title: {
     default: "Rotaract Club — Service Above Self",
@@ -19,6 +24,11 @@ export const metadata: Metadata = {
   description:
     "Rotaract Club platform — connecting young leaders through service, fellowship, and professional development.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  icons: {
+    icon: faviconUrl,
+    shortcut: faviconUrl,
+    apple: faviconUrl,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
