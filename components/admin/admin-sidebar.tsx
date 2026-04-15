@@ -22,6 +22,7 @@ import {
   Globe,
   PanelLeftClose,
   PanelLeftOpen,
+  ClipboardList,
 } from "lucide-react";
 
 const ADMIN_NAV = [
@@ -43,6 +44,7 @@ const ADMIN_NAV = [
     category: "People",
     items: [
       { label: "Members", href: "/admin/members", icon: Users },
+      { label: "Applications", href: "/admin/applications", icon: ClipboardList },
       { label: "Board Members", href: "/admin/board", icon: Shield },
       { label: "Committees", href: "/admin/committees", icon: Users },
     ],
