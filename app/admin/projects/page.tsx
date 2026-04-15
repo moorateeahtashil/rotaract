@@ -35,11 +35,11 @@ type Project = {
   location: string | null;
   is_featured: boolean;
   is_published: boolean;
-  event_id: string | null;
-  event?: { id: string; title: string; date: string } | null;
+  avenue_id: string | null;
+  avenue?: { id: string; name: string; slug: string } | null;
 };
 
-type EventOption = { id: string; title: string; date: string };
+type AvenueOption = { id: string; name: string; slug: string };
 
 const STATUS_OPTIONS = ["planned", "active", "completed", "archived", "cancelled"];
 
@@ -56,7 +56,7 @@ const EMPTY_FORM = {
   start_date: "",
   end_date: "",
   location: "",
-  event_id: "",
+  avenue_id: "",
   is_featured: false,
   is_published: false,
 };
@@ -66,7 +66,7 @@ export default function AdminProjectsPage() {
   const { toast } = useToast();
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
+  const [avenueOptions, setAvenueOptions] = useState<AvenueOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
@@ -75,25 +75,25 @@ export default function AdminProjectsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: proj }, { data: evts }] = await Promise.all([
+    const [{ data: proj }, { data: avns }] = await Promise.all([
       supabase
         .from("projects")
         .select(`
           id, title, slug, description, status, start_date, end_date,
-          location, is_featured, is_published, event_id,
-          event:events(id, title, date)
+          location, is_featured, is_published, avenue_id,
+          avenue:avenues(id, name, slug)
         `)
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase
-        .from("events")
-        .select("id, title, date")
+        .from("avenues")
+        .select("id, name, slug")
+        .eq("is_active", true)
         .is("deleted_at", null)
-        .order("date", { ascending: false })
-        .limit(100),
+        .order("name", { ascending: true }),
     ]);
     setProjects(proj || []);
-    setEventOptions(evts || []);
+    setAvenueOptions(avns || []);
     setLoading(false);
   }, [supabase]);
 
@@ -116,7 +116,7 @@ export default function AdminProjectsPage() {
       start_date: p.start_date || "",
       end_date: p.end_date || "",
       location: p.location || "",
-      event_id: p.event_id || "",
+      avenue_id: p.avenue_id || "",
       is_featured: p.is_featured,
       is_published: p.is_published,
     });
@@ -139,7 +139,7 @@ export default function AdminProjectsPage() {
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         location: form.location.trim() || null,
-        event_id: form.event_id || null,
+        avenue_id: form.avenue_id || null,
         is_featured: form.is_featured,
         is_published: form.is_published,
         published_at: form.is_published && !editing?.is_published ? new Date().toISOString() : undefined,
@@ -192,7 +192,7 @@ export default function AdminProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-charcoal">Projects</h1>
-          <p className="text-sm text-pewter mt-1">Showcase completed club initiatives and link them to events.</p>
+          <p className="text-sm text-pewter mt-1">Showcase completed club initiatives and service projects.</p>
         </div>
         <Button onClick={openAdd} className="bg-rotary-blue hover:bg-rotary-blue/90">
           <Plus className="mr-2 h-4 w-4" /> Add Project
@@ -220,9 +220,9 @@ export default function AdminProjectsPage() {
                       <div className="min-w-0">
                         <p className="font-semibold text-charcoal truncate">{p.title}</p>
                         <p className="text-sm text-pewter mt-0.5 line-clamp-1">{p.description}</p>
-                        {p.event && (
+                        {p.avenue && (
                           <p className="text-xs text-rotary-blue mt-1 font-medium">
-                            Linked Event: {p.event.title}
+                            Area of Focus: {p.avenue.name}
                           </p>
                         )}
                       </div>
@@ -284,19 +284,19 @@ export default function AdminProjectsPage() {
               />
             </div>
             <div>
-              <Label>Linked Event <span className="text-pewter text-xs font-normal">(required — projects must be linked to an event)</span></Label>
+              <Label>Area of Focus (Avenue of Service)</Label>
               <Select
-                value={form.event_id}
-                onValueChange={(v) => setForm((f) => ({ ...f, event_id: v === "none" ? "" : v }))}
+                value={form.avenue_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, avenue_id: v === "none" ? "" : v }))}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select an event" />
+                  <SelectValue placeholder="Select an area of focus" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— No linked event —</SelectItem>
-                  {eventOptions.map((ev) => (
-                    <SelectItem key={ev.id} value={ev.id}>
-                      {ev.title} ({new Date(ev.date).toLocaleDateString()})
+                  <SelectItem value="none">— None —</SelectItem>
+                  {avenueOptions.map((avenue) => (
+                    <SelectItem key={avenue.id} value={avenue.id}>
+                      {avenue.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

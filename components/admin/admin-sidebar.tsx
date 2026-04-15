@@ -23,6 +23,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ClipboardList,
+  Tag,
 } from "lucide-react";
 
 const ADMIN_NAV = [
@@ -53,6 +54,7 @@ const ADMIN_NAV = [
     category: "Program",
     items: [
       { label: "Events", href: "/admin/events", icon: Calendar },
+      { label: "Event Types", href: "/admin/event-types", icon: Tag },
       { label: "Projects", href: "/admin/projects", icon: FolderKanban },
       { label: "News", href: "/admin/news", icon: Newspaper },
     ],

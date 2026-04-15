@@ -22,20 +22,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Calendar, ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, MapPin, ExternalLink, X } from "lucide-react";
 
 type Event = {
   id: string;
   title: string;
   slug: string;
   description: string;
+  long_description: string | null;
   date: string;
   end_date: string | null;
   location: string | null;
+  location_url: string | null;
+  map_embed_url: string | null;
   image_url: string | null;
   status: string;
   is_public: boolean;
+  is_featured: boolean;
+  event_type: string | null;
   capacity: number | null;
+};
+
+type EventType = {
+  id: string;
+  name: string;
 };
 
 const STATUS_OPTIONS = ["draft", "published", "ongoing", "completed", "cancelled"];
@@ -48,20 +58,126 @@ const EMPTY_FORM = {
   title: "",
   slug: "",
   description: "",
+  long_description: "",
   date: "",
   time: "",
   end_date: "",
   location: "",
-  capacity: "",
+  location_url: "",
+  map_embed_url: "",
   status: "published",
   is_public: true,
+  is_featured: false,
+  event_type: "",
+  capacity: "",
 };
+
+function MapSelector({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [mapOpen, setMapOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [iframeKey, setIframeKey] = useState(0);
+
+  const embedUrl = value || "https://www.openstreetmap.org/export/embed.html?bbox=76.2,10.0,76.4,10.3&layer=mapnik";
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      const encoded = encodeURIComponent(searchQuery);
+      const osmSearchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encoded}`;
+      
+      fetch(osmSearchUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            const { lat, lon, display_name } = data[0];
+            const bbox = `${parseFloat(lon) - 0.01},${parseFloat(lat) - 0.01},${parseFloat(lon) + 0.01},${parseFloat(lat) + 0.01}`;
+            const newEmbedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
+            onChange(newEmbedUrl);
+            setMapOpen(false);
+          }
+        });
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Map Location (Optional)</Label>
+      {value ? (
+        <div className="relative rounded-lg border overflow-hidden">
+          <iframe
+            key={iframeKey}
+            src={value}
+            width="100%"
+            height="200"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+          <Button
+            variant="destructive"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={() => onChange("")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <Button variant="outline" onClick={() => setMapOpen(true)} className="w-full">
+          <MapPin className="h-4 w-4 mr-2" /> Select Location on Map
+        </Button>
+      )}
+
+      <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Select Location on Map</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <Input
+                placeholder="Search for a location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button type="submit">Search</Button>
+            </form>
+            <div className="rounded-lg border overflow-hidden">
+              <iframe
+                src={embedUrl}
+                width="100%"
+                height="400"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+            <p className="text-sm text-pewter">
+              Zoom and pan to the desired location, then click "Use This Location" to embed it.
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={() => { onChange(embedUrl); setMapOpen(false); setIframeKey(k => k + 1); }} className="flex-1">
+                Use This Location
+              </Button>
+              <Button variant="outline" onClick={() => setMapOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
 export default function AdminEventsPage() {
   const supabase = createClient() as any;
   const { toast } = useToast();
 
   const [events, setEvents] = useState<Event[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Event | null>(null);
@@ -72,12 +188,19 @@ export default function AdminEventsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("events")
-      .select("id, title, slug, description, date, end_date, location, image_url, status, is_public, capacity")
-      .is("deleted_at", null)
-      .order("date", { ascending: false });
-    setEvents(data || []);
+    const [eventsData, typesData] = await Promise.all([
+      supabase
+        .from("events")
+        .select("id, title, slug, description, long_description, date, end_date, location, location_url, map_embed_url, image_url, status, is_public, is_featured, event_type, capacity")
+        .is("deleted_at", null)
+        .order("date", { ascending: false }),
+      supabase
+        .from("event_types")
+        .select("id, name")
+        .order("name", { ascending: true }),
+    ]);
+    setEvents(eventsData.data || []);
+    setEventTypes(typesData.data || []);
     setLoading(false);
   }, [supabase]);
 
@@ -97,14 +220,19 @@ export default function AdminEventsPage() {
     setForm({
       title: e.title,
       slug: e.slug,
-      description: e.description,
+      description: e.description || "",
+      long_description: e.long_description || "",
       date: dateObj ? dateObj.toISOString().split("T")[0] : "",
       time: dateObj ? dateObj.toTimeString().slice(0, 5) : "",
       end_date: e.end_date ? new Date(e.end_date).toISOString().split("T")[0] : "",
       location: e.location || "",
-      capacity: e.capacity != null ? String(e.capacity) : "",
+      location_url: e.location_url || "",
+      map_embed_url: e.map_embed_url || "",
       status: e.status,
       is_public: e.is_public,
+      is_featured: e.is_featured,
+      event_type: e.event_type || "",
+      capacity: e.capacity != null ? String(e.capacity) : "",
     });
     setImagePreview(e.image_url || "");
     setImageFile(null);
@@ -137,7 +265,6 @@ export default function AdminEventsPage() {
     }
     setSaving(true);
     try {
-      // Combine date + time into a datetime string
       const dateTime = form.time ? `${form.date}T${form.time}:00` : `${form.date}T00:00:00`;
       const slug = form.slug.trim() || slugify(form.title);
 
@@ -149,13 +276,18 @@ export default function AdminEventsPage() {
       const payload: any = {
         title: form.title.trim(),
         slug,
-        description: form.description.trim() || "",
+        description: form.description.trim() || null,
+        long_description: form.long_description.trim() || null,
         date: dateTime,
         end_date: form.end_date ? `${form.end_date}T23:59:00` : null,
         location: form.location.trim() || null,
+        location_url: form.location_url.trim() || null,
+        map_embed_url: form.map_embed_url || null,
         capacity: form.capacity ? Number(form.capacity) : null,
         status: form.status,
         is_public: form.is_public,
+        is_featured: form.is_featured,
+        event_type: form.event_type || null,
         image_url,
         updated_at: new Date().toISOString(),
       };
@@ -243,12 +375,17 @@ export default function AdminEventsPage() {
                           {new Date(ev.date).toLocaleDateString("en-US", { dateStyle: "medium" })}
                           {ev.location && ` · ${ev.location}`}
                         </p>
-                        <p className="text-sm text-pewter mt-1 line-clamp-1">{ev.description}</p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusColor[ev.status] || "bg-gray-100 text-gray-600"}`}>
-                          {ev.status}
-                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusColor[ev.status] || "bg-gray-100 text-gray-600"}`}>
+                            {ev.status}
+                          </span>
+                          {ev.event_type && (
+                            <Badge variant="outline" className="text-xs">{ev.event_type}</Badge>
+                          )}
+                          {ev.is_featured && (
+                            <Badge className="bg-rotary-gold text-black text-xs">Featured</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -268,19 +405,34 @@ export default function AdminEventsPage() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Event" : "Add Event"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div>
-              <Label>Title *</Label>
-              <Input
-                className="mt-1"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value, slug: f.slug || slugify(e.target.value) }))}
-                placeholder="Event title"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Title *</Label>
+                <Input
+                  className="mt-1"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value, slug: f.slug || slugify(e.target.value) }))}
+                  placeholder="Event title"
+                />
+              </div>
+              <div>
+                <Label>Event Type</Label>
+                <Select value={form.event_type} onValueChange={(v) => setForm((f) => ({ ...f, event_type: v }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eventTypes.map((t) => (
+                      <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label>Slug</Label>
@@ -291,16 +443,26 @@ export default function AdminEventsPage() {
               />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label>Short Description</Label>
               <Textarea
                 className="mt-1"
-                rows={3}
+                rows={2}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="What is this event about?"
+                placeholder="Brief description for event cards..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Long Description</Label>
+              <Textarea
+                className="mt-1"
+                rows={4}
+                value={form.long_description}
+                onChange={(e) => setForm((f) => ({ ...f, long_description: e.target.value }))}
+                placeholder="Detailed information about the event..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Date *</Label>
                 <Input
@@ -330,7 +492,7 @@ export default function AdminEventsPage() {
               />
             </div>
             <div>
-              <Label>Location</Label>
+              <Label>Location Name</Label>
               <Input
                 className="mt-1"
                 value={form.location}
@@ -339,27 +501,42 @@ export default function AdminEventsPage() {
               />
             </div>
             <div>
-              <Label>Capacity</Label>
+              <Label>Location URL (Google Maps, etc.)</Label>
               <Input
                 className="mt-1"
-                type="number"
-                value={form.capacity}
-                onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-                placeholder="Leave blank for unlimited"
+                value={form.location_url}
+                onChange={(e) => setForm((f) => ({ ...f, location_url: e.target.value }))}
+                placeholder="https://maps.google.com/..."
               />
             </div>
-            <div>
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <MapSelector
+              value={form.map_embed_url}
+              onChange={(url) => setForm((f) => ({ ...f, map_embed_url: url }))}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Capacity</Label>
+                <Input
+                  className="mt-1"
+                  type="number"
+                  value={form.capacity}
+                  onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
+                  placeholder="Leave blank for unlimited"
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label>Event Image</Label>
@@ -371,15 +548,27 @@ export default function AdminEventsPage() {
                 <Input type="file" accept="image/*" onChange={onImageChange} className="max-w-xs" />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="ev_public"
-                checked={form.is_public}
-                onChange={(e) => setForm((f) => ({ ...f, is_public: e.target.checked }))}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="ev_public">Public (visible to everyone)</Label>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="ev_public"
+                  checked={form.is_public}
+                  onChange={(e) => setForm((f) => ({ ...f, is_public: e.target.checked }))}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="ev_public">Public</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="ev_featured"
+                  checked={form.is_featured}
+                  onChange={(e) => setForm((f) => ({ ...f, is_featured: e.target.checked }))}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="ev_featured">Featured</Label>
+              </div>
             </div>
             <div className="flex gap-2 pt-2">
               <Button className="flex-1 bg-rotary-blue hover:bg-rotary-blue/90" onClick={handleSave} disabled={saving}>
