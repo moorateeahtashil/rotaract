@@ -53,7 +53,7 @@ const EMPTY_FORM = {
   end_date: "",
   location: "",
   capacity: "",
-  status: "draft",
+  status: "published",
   is_public: true,
 };
 

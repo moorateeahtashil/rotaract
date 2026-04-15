@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fetchRotaryRSSFeed, formatRSSDate, type RotaryNewsItem } from "@/lib/utils/rss-parser";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Home",
 };
@@ -92,10 +94,24 @@ async function UpcomingEventsSection({ section }: { section: any }) {
           {events.map((event: any) => (
             <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-200 border-border/50 group">
               <div className="h-44 bg-gradient-to-br from-rotary-blue/20 via-azure/15 to-rotary-blue/20 flex items-center justify-center relative">
-                <Calendar className="h-14 w-14 text-rotary-blue/30" />
+                {event.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={event.image_url}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <Calendar className="h-14 w-14 text-rotary-blue/30" />
+                )}
                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-sm">
                   <p className="text-xs font-bold text-rotary-blue">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                 </div>
+                {event.is_featured && (
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-rotary-gold text-black text-xs">Featured</Badge>
+                  </div>
+                )}
               </div>
               <CardContent className="pt-4 pb-4">
                 <h3 className="font-bold text-charcoal mb-1.5 line-clamp-1 group-hover:text-rotary-blue transition-colors">{event.title}</h3>

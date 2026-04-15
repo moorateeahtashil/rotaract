@@ -7,6 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Events & Calendar",
   description: "Stay updated with our upcoming events, meetings, and service activities.",

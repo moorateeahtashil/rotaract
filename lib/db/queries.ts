@@ -214,8 +214,7 @@ export async function getEvents({
     .select(
       `
       *,
-      avenue:avenues(name, slug, color_hex),
-      project:projects(title, slug)
+      avenue:avenues(name, slug, color_hex)
     `,
     )
     .eq("is_public", true)
@@ -241,8 +240,7 @@ export async function getEventBySlug(slug: string) {
     .select(
       `
       *,
-      avenue:avenues(name, slug, color_hex),
-      project:projects(title, slug)
+      avenue:avenues(name, slug, color_hex)
     `,
     )
     .eq("slug", slug)
