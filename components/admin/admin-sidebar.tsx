@@ -19,6 +19,7 @@ import {
   BarChart3,
   Shield,
   ScrollText,
+  Globe,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const ADMIN_NAV = [
     category: "Content",
     items: [
       { label: "Site Settings", href: "/admin/settings", icon: Settings },
+      { label: "Rotary Highlights", href: "/admin/highlights", icon: Globe },
       { label: "Legal Pages", href: "/admin/content", icon: ScrollText },
     ],
   },

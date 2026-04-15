@@ -458,6 +458,20 @@ export async function getPageBlocks(pageId: string) {
 }
 
 // ============================================================
+// ROTARY HIGHLIGHTS
+// ============================================================
+
+export async function getRotaryHighlights() {
+  const supabase = await createServerClient();
+  const { data } = await supabase
+    .from("rotary_highlights")
+    .select("id, title, body, image_url, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  return (data ?? []) as any[];
+}
+
+// ============================================================
 // SPONSOR CLUB
 // ============================================================
 

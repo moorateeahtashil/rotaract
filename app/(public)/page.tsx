@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getHomepageSections, getFeaturedProjects, getUpcomingEvents, getBoardMembers, getPosts, getSponsorClub, getSiteSettings } from "@/lib/db/queries";
-import { ArrowRight, Users, Calendar, Heart, MapPin, Clock, Rss, Globe, FolderKanban } from "lucide-react";
+import { getHomepageSections, getFeaturedProjects, getUpcomingEvents, getBoardMembers, getPosts, getSponsorClub, getSiteSettings, getRotaryHighlights } from "@/lib/db/queries";
+import { ArrowRight, Users, Calendar, Heart, MapPin, Clock, Rss, Globe, FolderKanban, Sparkles } from "lucide-react";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -344,50 +345,66 @@ async function NewsPreviewSection({ section }: { section: any }) {
 }
 
 // ─── WHAT IS ROTARY? ───
-function WhatIsRotarySection() {
-  const causes = [
-    { icon: "🕊️", title: "Peace", stat: "150+ Peace Centers" },
-    { icon: "🚫", title: "Disease Prevention", stat: "99.9% Polio Free" },
-    { icon: "💧", title: "Water & Sanitation", stat: "10M+ Served" },
-    { icon: "📚", title: "Education", stat: "50K+ Scholarships" },
-    { icon: "👩‍⚕️", title: "Maternal Health", stat: "100+ Countries" },
-    { icon: "💼", title: "Economic Growth", stat: "30K+ Projects" },
-    { icon: "🌍", title: "Environment", stat: "5K+ Initiatives" },
-    { icon: "🤝", title: "Community Service", stat: "1.4M Members" },
-  ];
+async function WhatIsRotarySection() {
+  const highlights = await getRotaryHighlights();
 
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white relative overflow-hidden">
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-rotary-gold rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-sky-blue rounded-full blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-5">
             <Globe className="h-4 w-4" />
             <span className="text-sm font-medium">Since 1905</span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">What is Rotary?</h2>
           <p className="text-white/80 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
-            Rotary International is a global network of <strong className="text-white">1.4 million members</strong> across{' '}
-            <strong className="text-white">46,000+ clubs</strong> in <strong className="text-white">200+ countries</strong> — 
+            Rotary International is a global network of <strong className="text-white">1.4 million members</strong> across{" "}
+            <strong className="text-white">46,000+ clubs</strong> in <strong className="text-white">200+ countries</strong> —{" "}
             united by a belief in the power of service to create lasting change.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
-          {causes.map((cause) => (
-            <div key={cause.title} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 hover:scale-105 transition-all duration-200">
-              <div className="text-3xl mb-3">{cause.icon}</div>
-              <h3 className="font-bold text-white mb-1">{cause.title}</h3>
-              <div className="text-xs font-semibold text-rotary-gold">{cause.stat}</div>
-            </div>
-          ))}
-        </div>
+        {/* Horizontally scrollable highlight cards */}
+        {highlights.length > 0 && (
+          <div className="px-6">
+            <HorizontalScroll>
+              {highlights.map((h: any) => (
+                <div
+                  key={h.id}
+                  className="snap-start flex-shrink-0 w-64 sm:w-72 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/15 transition-colors duration-200"
+                >
+                  {h.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={h.image_url}
+                      alt={h.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-white/5 flex items-center justify-center">
+                      <Sparkles className="h-10 w-10 text-white/30" />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <h3 className="font-bold text-white text-lg mb-2">{h.title}</h3>
+                    {h.body && (
+                      <p className="text-white/70 text-sm leading-relaxed">{h.body}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </HorizontalScroll>
+          </div>
+        )}
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Footer links */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
           <Button asChild className="bg-rotary-gold text-black hover:bg-rotary-gold/90 font-semibold px-6">
             <Link href="/about/rotary">
               Explore Rotary History <ArrowRight className="ml-2 h-4 w-4" />
