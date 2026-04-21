@@ -160,15 +160,22 @@ export async function POST(req: NextRequest) {
           .eq("email", email)
           .single();
 
-        if (existingProfile) {
-          await adminSupabase.from("user_roles").upsert(
-            { user_id: existingProfile.user_id, role, is_active: true },
-            { onConflict: "user_id,role" }
-          );
+        if (!existingProfile) {
+          return NextResponse.json({ error: "User exists in auth but has no profile. Contact support." }, { status: 500 });
         }
+
+        const { error: roleError } = await adminSupabase.from("user_roles").upsert(
+          { user_id: existingProfile.user_id, role, is_active: true },
+          { onConflict: "user_id,role" }
+        );
+
+        if (roleError) {
+          return NextResponse.json({ error: `Failed to assign role: ${roleError.message}` }, { status: 500 });
+        }
+
         return NextResponse.json({
           success: true,
-          message: "User already has an account. Role has been assigned.",
+          message: `${email} already has an account. Role "${role}" has been assigned.`,
         });
       } else {
         // Invited but never confirmed — resend a fresh invite link

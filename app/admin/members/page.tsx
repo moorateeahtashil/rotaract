@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/db/browser-client";
 
@@ -74,6 +74,7 @@ export default function AdminMembersPage() {
     role: "member",
   });
   const [saving, setSaving] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
   const { toast } = useToast();
 
   const loadUsers = useCallback(async () => {
@@ -133,15 +134,32 @@ export default function AdminMembersPage() {
   async function assignRole() {
     if (!selectedUser) return;
     setSaving(true);
-    const supabase = createClient() as any;
     try {
-      const { error } = await supabase.from("user_roles").upsert(
-        { user_id: selectedUser.user_id, role: newRole, is_active: true },
-        { onConflict: "user_id,role" }
-      );
-      if (error) throw error;
+      const res = await fetch("/api/admin/users/role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUser.user_id, role: newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to assign role");
       toast({ variant: "success", title: "Role assigned", description: `${selectedUser.first_name} is now a ${newRole}` });
       setRoleDialogOpen(false);
+      await loadUsers();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteUser(user: UserRecord) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.user_id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete user");
+      toast({ variant: "success", title: "User deleted", description: `${user.first_name} ${user.last_name} has been removed.` });
+      setDeleteDialog({ open: false });
       await loadUsers();
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
@@ -290,6 +308,14 @@ export default function AdminMembersPage() {
                 }}
               >
                 <Shield className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => setDeleteDialog({ open: true, user })}
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -514,6 +540,28 @@ export default function AdminMembersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteDialog.user?.first_name} {deleteDialog.user?.last_name}</strong> ({deleteDialog.user?.email}) and all their data. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteDialog.user && deleteUser(deleteDialog.user)}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={saving}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Approve Applicant Dialog */}
       <AlertDialog open={approveDialog.open} onOpenChange={(open) => setApproveDialog({ open })}>
