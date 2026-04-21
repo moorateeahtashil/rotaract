@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Use service role client to bypass RLS for admin operations
     const adminSupabase = createServiceRoleClient() as any;
 
-    // Invite user via Supabase Auth
+    // Invite user via Supabase Auth (uses Brevo SMTP configured in Supabase dashboard)
     const { data: inviteData, error: inviteError } = await adminSupabase.auth.admin.inviteUserByEmail(
       email,
       {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     });
 
     // If role is member or higher, create member record
-    if (role !== "applicant") {
+    if (role !== "applicant" && role !== "prospective_member") {
       await adminSupabase.from("members").upsert(
         {
           user_id: newUserId,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -259,7 +259,9 @@ export default function AdminMembersPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-              {user.roles.slice(0, 2).map((r) => getRoleBadge(r))}
+              {user.roles.slice(0, 2).map((r) => (
+                <Fragment key={r}>{getRoleBadge(r)}</Fragment>
+              ))}
               {user.roles.length > 2 && (
                 <Badge variant="outline" className="text-xs">+{user.roles.length - 2}</Badge>
               )}
@@ -472,7 +474,9 @@ export default function AdminMembersPage() {
             <div>
               <Label>Current Roles</Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {selectedUser?.roles.map((r) => getRoleBadge(r))}
+                {selectedUser?.roles.map((r) => (
+                <Fragment key={r}>{getRoleBadge(r)}</Fragment>
+              ))}
                 {selectedUser?.roles.length === 0 && <span className="text-sm text-pewter">No roles assigned</span>}
               </div>
             </div>
