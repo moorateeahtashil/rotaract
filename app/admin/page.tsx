@@ -33,6 +33,7 @@ export default async function AdminDashboardPage() {
       .from("events")
       .select("*", { count: "exact", head: true })
       .in("status", ["published", "ongoing"])
+      .gte("end_date", new Date().toISOString().split("T")[0])
       .is("deleted_at", null),
     supabase
       .from("projects")

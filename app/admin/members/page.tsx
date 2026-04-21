@@ -16,30 +16,29 @@ import { createClient } from "@/lib/db/browser-client";
 
 // ── System Roles (Dashboard Access) ──
 const SYSTEM_ROLES = [
-  { value: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-700 border-red-200" },
-  { value: "admin",       label: "Admin",       color: "bg-orange-100 text-orange-700 border-orange-200" },
-  { value: "normal",      label: "Normal",      color: "bg-gray-100 text-gray-600 border-gray-200" },
+  { value: "super_admin", label: "Super Admin", style: { background: "#fee2e2", color: "#b91c1c", borderColor: "#fca5a5" } },
+  { value: "admin",       label: "Admin",       style: { background: "#ffedd5", color: "#c2410c", borderColor: "#fdba74" } },
+  { value: "normal",      label: "Normal",      style: { background: "#f3f4f6", color: "#4b5563", borderColor: "#d1d5db" } },
 ];
 
 // ── Org Roles (Membership Status) ──
 const ORG_ROLES = [
-  { value: "board_member",       label: "Board Member",       color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "member",             label: "Member",             color: "bg-green-100 text-green-700 border-green-200" },
-  { value: "prospective_member", label: "Prospective Member", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  { value: "board_member",       label: "Board Member",       style: { background: "#dbeafe", color: "#1d4ed8", borderColor: "#93c5fd" } },
+  { value: "member",             label: "Member",             style: { background: "#dcfce7", color: "#15803d", borderColor: "#86efac" } },
+  { value: "prospective_member", label: "Prospective Member", style: { background: "#fef9c3", color: "#a16207", borderColor: "#fde047" } },
 ];
 
 // All roles for badge display (includes legacy)
 const ALL_ROLES = [
   ...SYSTEM_ROLES,
   ...ORG_ROLES,
-  // Legacy roles kept for display
-  { value: "president",             label: "President (Legacy)",           color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "secretary",             label: "Secretary (Legacy)",           color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { value: "public_image_director", label: "PI Director (Legacy)",         color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "membership_director",   label: "Membership Dir. (Legacy)",     color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "project_director",      label: "Project Dir. (Legacy)",        color: "bg-purple-100 text-purple-700 border-purple-200" },
-  { value: "event_manager",         label: "Event Manager (Legacy)",       color: "bg-teal-100 text-teal-700 border-teal-200" },
-  { value: "applicant",             label: "Applicant (Legacy)",           color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  { value: "president",             label: "President",           style: { background: "#dbeafe", color: "#1d4ed8", borderColor: "#93c5fd" } },
+  { value: "secretary",             label: "Secretary",           style: { background: "#dbeafe", color: "#1d4ed8", borderColor: "#93c5fd" } },
+  { value: "public_image_director", label: "PI Director",         style: { background: "#f3e8ff", color: "#7e22ce", borderColor: "#d8b4fe" } },
+  { value: "membership_director",   label: "Membership Dir.",     style: { background: "#f3e8ff", color: "#7e22ce", borderColor: "#d8b4fe" } },
+  { value: "project_director",      label: "Project Dir.",        style: { background: "#f3e8ff", color: "#7e22ce", borderColor: "#d8b4fe" } },
+  { value: "event_manager",         label: "Event Manager",       style: { background: "#ccfbf1", color: "#0f766e", borderColor: "#5eead4" } },
+  { value: "applicant",             label: "Applicant",           style: { background: "#fef9c3", color: "#a16207", borderColor: "#fde047" } },
 ];
 
 type UserRecord = {
@@ -55,7 +54,11 @@ type UserRecord = {
 function getRoleBadge(role: string) {
   const r = ALL_ROLES.find((x) => x.value === role);
   if (!r) return <Badge variant="outline">{role}</Badge>;
-  return <Badge variant="outline" className={r.color}>{r.label}</Badge>;
+  return (
+    <Badge variant="outline" style={r.style}>
+      {r.label}
+    </Badge>
+  );
 }
 
 export default function AdminMembersPage() {
@@ -66,7 +69,8 @@ export default function AdminMembersPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [approveDialog, setApproveDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
-  const [newRole, setNewRole] = useState("member");
+  const [newSystemRole, setNewSystemRole] = useState<string>("");
+  const [newOrgRole, setNewOrgRole] = useState<string>("member");
   const [createForm, setCreateForm] = useState({
     first_name: "",
     last_name: "",
@@ -135,14 +139,33 @@ export default function AdminMembersPage() {
     if (!selectedUser) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/users/role", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: selectedUser.user_id, role: newRole }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to assign role");
-      toast({ variant: "success", title: "Role assigned", description: `${selectedUser.first_name} is now a ${newRole}` });
+      const rolesToAssign: string[] = [];
+
+      // Add system role if selected
+      if (newSystemRole && newSystemRole !== "none") {
+        rolesToAssign.push(newSystemRole);
+      }
+
+      // Add org role
+      rolesToAssign.push(newOrgRole);
+
+      // Board members are also members
+      if (newOrgRole === "board_member" && !rolesToAssign.includes("member")) {
+        rolesToAssign.push("member");
+      }
+
+      for (const role of rolesToAssign) {
+        const res = await fetch("/api/admin/users/role", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: selectedUser.user_id, role }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Failed to assign role: ${role}`);
+      }
+
+      const assigned = rolesToAssign.join(", ");
+      toast({ variant: "success", title: "Roles assigned", description: `${selectedUser.first_name} has been assigned: ${assigned}` });
       setRoleDialogOpen(false);
       await loadUsers();
     } catch (e: any) {
@@ -303,7 +326,10 @@ export default function AdminMembersPage() {
                 size="sm"
                 onClick={() => {
                   setSelectedUser(user);
-                  setNewRole(user.roles[0] || "member");
+                  const sysRole = user.roles.find(r => SYSTEM_ROLES.map(s => s.value).includes(r)) || "";
+                  const orgRole = user.roles.find(r => ORG_ROLES.map(o => o.value).includes(r)) || "member";
+                  setNewSystemRole(sysRole);
+                  setNewOrgRole(orgRole);
                   setRoleDialogOpen(true);
                 }}
               >
@@ -497,39 +523,56 @@ export default function AdminMembersPage() {
           <DialogHeader>
             <DialogTitle>Assign Role</DialogTitle>
             <DialogDescription>
-              Assign a role to {selectedUser?.first_name} {selectedUser?.last_name}
+              {selectedUser?.first_name} {selectedUser?.last_name} &mdash; {selectedUser?.email}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Current roles */}
             <div>
-              <Label>Current Roles</Label>
+              <Label className="text-xs font-semibold uppercase text-pewter tracking-wide">Current Roles</Label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedUser?.roles.map((r) => (
-                <Fragment key={r}>{getRoleBadge(r)}</Fragment>
-              ))}
+                  <Fragment key={r}>{getRoleBadge(r)}</Fragment>
+                ))}
                 {selectedUser?.roles.length === 0 && <span className="text-sm text-pewter">No roles assigned</span>}
               </div>
             </div>
-            <div>
-              <Label className="text-xs font-semibold uppercase text-pewter tracking-wide">System Role (Dashboard Access)</Label>
-              <Select value={newRole} onValueChange={setNewRole}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
+
+            {/* System role */}
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div>
+                <p className="text-xs font-semibold uppercase text-pewter tracking-wide">System Role</p>
+                <p className="text-xs text-pewter mt-0.5">Controls dashboard access</p>
+              </div>
+              <Select value={newSystemRole} onValueChange={setNewSystemRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No system role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__section_system" disabled className="text-xs font-semibold text-pewter">── System Roles ──</SelectItem>
+                  <SelectItem value="none">No system role</SelectItem>
                   {SYSTEM_ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                   ))}
-                  <SelectItem value="__section_org" disabled className="text-xs font-semibold text-pewter">── Org Roles ──</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Org role */}
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div>
+                <p className="text-xs font-semibold uppercase text-pewter tracking-wide">Org Role</p>
+                <p className="text-xs text-pewter mt-0.5">Membership status. Board Member automatically includes Member.</p>
+              </div>
+              <Select value={newOrgRole} onValueChange={setNewOrgRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                   {ORG_ROLES.map((r) => (
                     <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-pewter mt-1">
-                System roles: <strong>Admin</strong> = dashboard access. Org roles: <strong>Board Member</strong> = elevated privileges, <strong>Member</strong> = approved, <strong>Prospective</strong> = pending.
-              </p>
             </div>
           </div>
           <DialogFooter>
