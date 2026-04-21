@@ -141,27 +141,18 @@ export default function AdminMembersPage() {
         if (!res.ok) throw new Error(d.error || `Failed to assign ${newSystemRole}`);
       }
 
-      // ── Org role ─────────────────────────────────────────────
-      const orgRolesToAssign = [newOrgRole];
-      // board_member also gets member
-      if (newOrgRole === "board_member") orgRolesToAssign.push("member");
-
-      for (const role of orgRolesToAssign) {
-        const res = await fetch("/api/admin/users/role", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: selectedUser.user_id,
-            role,
-            // Deactivate old org roles on first call only
-            deactivateRoles: role === newOrgRole
-              ? oldOrgRoles.filter((r) => !orgRolesToAssign.includes(r))
-              : [],
-          }),
-        });
-        const d = await res.json();
-        if (!res.ok) throw new Error(d.error || `Failed to assign ${role}`);
-      }
+      // ── Org role (exclusive — only one at a time) ────────────
+      const res2 = await fetch("/api/admin/users/role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: selectedUser.user_id,
+          role: newOrgRole,
+          deactivateRoles: oldOrgRoles.filter((r) => r !== newOrgRole),
+        }),
+      });
+      const d2 = await res2.json();
+      if (!res2.ok) throw new Error(d2.error || `Failed to assign ${newOrgRole}`);
 
       toast({ variant: "success", title: "Roles saved", description: `${selectedUser.first_name}'s roles have been updated.` });
       setRoleDialogOpen(false);

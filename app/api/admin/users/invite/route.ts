@@ -243,8 +243,21 @@ export async function POST(req: NextRequest) {
       { onConflict: "user_id,role" }
     );
 
+    // The handle_new_user_role trigger auto-assigns prospective_member to every new user.
+    // If the invited role is higher (member / board_member / admin / super_admin),
+    // deactivate the trigger-added prospective_member so only the intended role is active.
+    const ORG_ROLES_ABOVE_PROSPECTIVE = ["member", "board_member", "admin", "super_admin", "president",
+      "secretary", "public_image_director", "membership_director", "project_director", "event_manager"];
+    if (ORG_ROLES_ABOVE_PROSPECTIVE.includes(role)) {
+      await adminSupabase
+        .from("user_roles")
+        .update({ is_active: false })
+        .eq("user_id", newUserId)
+        .eq("role", "prospective_member");
+    }
+
     // Create member record if role warrants it
-    if (role !== "applicant" && role !== "prospective_member") {
+    if (role !== "prospective_member") {
       await adminSupabase.from("members").upsert(
         {
           user_id: newUserId,
