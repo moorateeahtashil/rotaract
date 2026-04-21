@@ -7,8 +7,9 @@ async function sendViaBrevo(to: string, subject: string, html: string) {
   const fromEmail = process.env.BREVO_FROM_EMAIL;
   const fromName = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
 
+  console.log("[Brevo] apiKey set:", !!apiKey, "| fromEmail set:", !!fromEmail);
   if (!apiKey || !fromEmail) {
-    return { error: "Brevo not configured" };
+    return { error: `Brevo not configured — apiKey:${!!apiKey} fromEmail:${!!fromEmail}` };
   }
 
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
