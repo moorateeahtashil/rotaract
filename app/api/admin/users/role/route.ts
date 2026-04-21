@@ -3,10 +3,10 @@ import { createServerClient, createServiceRoleClient } from "@/lib/db/server";
 import { cookies } from "next/headers";
 
 const ADMIN_ROLES = [
-  "super_admin", "admin", "president", "secretary",
+  "super_admin", "admin", "normal", "president", "secretary",
   "public_image_director", "membership_director",
   "project_director", "event_manager", "board_member",
-  "member", "applicant"
+  "member", "prospective_member", "applicant"
 ];
 
 /**

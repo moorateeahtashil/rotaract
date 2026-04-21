@@ -18,7 +18,6 @@ import { createClient } from "@/lib/db/browser-client";
 const SYSTEM_ROLES = [
   { value: "super_admin", label: "Super Admin", style: { background: "#fee2e2", color: "#b91c1c", borderColor: "#fca5a5" } },
   { value: "admin",       label: "Admin",       style: { background: "#ffedd5", color: "#c2410c", borderColor: "#fdba74" } },
-  { value: "normal",      label: "Normal",      style: { background: "#f3f4f6", color: "#4b5563", borderColor: "#d1d5db" } },
 ];
 
 // ── Org Roles (Membership Status) ──
@@ -28,9 +27,10 @@ const ORG_ROLES = [
   { value: "prospective_member", label: "Prospective Member", style: { background: "#fef9c3", color: "#a16207", borderColor: "#fde047" } },
 ];
 
-// All roles for badge display (includes legacy)
+// All roles for badge display (includes legacy + normal)
 const ALL_ROLES = [
   ...SYSTEM_ROLES,
+  { value: "normal", label: "Normal", style: { background: "#f3f4f6", color: "#4b5563", borderColor: "#d1d5db" } },
   ...ORG_ROLES,
   { value: "president",             label: "President",           style: { background: "#dbeafe", color: "#1d4ed8", borderColor: "#93c5fd" } },
   { value: "secretary",             label: "Secretary",           style: { background: "#dbeafe", color: "#1d4ed8", borderColor: "#93c5fd" } },
@@ -141,8 +141,8 @@ export default function AdminMembersPage() {
     try {
       const rolesToAssign: string[] = [];
 
-      // Add system role if selected
-      if (newSystemRole && newSystemRole !== "none") {
+      // Add system role if selected (skip "none" and "normal" — those mean no system role)
+      if (newSystemRole && newSystemRole !== "none" && newSystemRole !== "normal") {
         rolesToAssign.push(newSystemRole);
       }
 
