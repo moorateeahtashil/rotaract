@@ -43,31 +43,39 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Implicit flow: Supabase puts tokens in the URL hash (#access_token=...&type=invite).
-    // onAuthStateChange fires SIGNED_IN once the client parses those tokens.
-    // We must register the listener BEFORE calling getSession so we don't miss the event.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
-        setSessionReady(true);
-        setChecking(false);
-      }
-    });
+    async function initSession() {
+      // 1. Try hash tokens first — Supabase implicit flow puts them in the URL hash
+      //    e.g. /reset-password#access_token=xxx&refresh_token=yyy&type=invite
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
 
-    // Also check for an existing cookie-based session (e.g. arrived via /auth/callback)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (data.session && !error) {
+            // Clean the hash from the URL without triggering a navigation
+            window.history.replaceState(null, "", window.location.pathname);
+            setSessionReady(true);
+            setChecking(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Check for an existing cookie-based session (PKCE flow via /auth/callback)
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setSessionReady(true);
-        setChecking(false);
       }
-    });
+      setChecking(false);
+    }
 
-    // Stop spinner after 5s if nothing fires
-    const timeout = setTimeout(() => setChecking(false), 5000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
+    initSession();
   }, []);
 
   async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
