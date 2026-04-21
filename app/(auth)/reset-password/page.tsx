@@ -43,21 +43,24 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
+    // The auth/callback route already exchanged the PKCE code server-side and
+    // stored the session in cookies — so getSession() is the reliable check here.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+      }
+      setChecking(false);
+    });
+
+    // Also handle the legacy implicit flow (hash tokens) just in case
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Invite flow fires SIGNED_IN; password-reset flow fires PASSWORD_RECOVERY
       if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
         setSessionReady(true);
         setChecking(false);
       }
     });
 
-    // Fallback: stop the spinner after 4s regardless
-    const timeout = setTimeout(() => setChecking(false), 4000);
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(timeout);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
