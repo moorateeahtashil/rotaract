@@ -210,7 +210,11 @@ export default function AdminMembersPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create member");
 
-      toast({ variant: "success", title: "Invited!", description: `An invitation has been sent to ${createForm.email}` });
+      if (data.warning) {
+        toast({ variant: "default", title: "Member added", description: data.message });
+      } else {
+        toast({ variant: "success", title: "Invited!", description: `An invitation has been sent to ${createForm.email}` });
+      }
       setCreateDialogOpen(false);
       setCreateForm({ first_name: "", last_name: "", email: "", role: "member" });
       await loadUsers();
