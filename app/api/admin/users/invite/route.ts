@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceRoleClient } from "@/lib/db/server";
-import { renderEmailTemplate } from "@/lib/email/index";
 
 async function sendViaBrevo(to: string, subject: string, html: string) {
   const apiKey = process.env.BREVO_API_KEY;
   const fromEmail = process.env.BREVO_FROM_EMAIL;
   const fromName = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
 
-  console.log("[Brevo] apiKey set:", !!apiKey, "| fromEmail set:", !!fromEmail);
   if (!apiKey || !fromEmail) {
     return { error: `Brevo not configured — apiKey:${!!apiKey} fromEmail:${!!fromEmail}` };
   }
@@ -122,23 +120,110 @@ export async function POST(req: NextRequest) {
     }
 
     // Send branded invite email via Brevo API
-    const html = renderEmailTemplate({
-      title: `You're invited to ${clubName}`,
-      body: `
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">Hi <strong>${first_name}</strong>,</p>
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
-          You've been invited to join the <strong style="color:#17458f;">${clubName} Member Portal</strong> —
-          your central hub for events, announcements, and club resources.
-        </p>
-        <p style="margin:0 0 24px;font-size:15px;line-height:1.7;">
-          Click the button below to set your password and activate your account.
-        </p>
-        <p style="margin:24px 0 0;font-size:13px;color:#898a8d;">This link expires in 24 hours.</p>
-      `,
-      ctaUrl: actionLink,
-      ctaText: "Accept Invitation",
-      footer: `&copy; ${new Date().getFullYear()} ${clubName} &mdash; Service Above Self`,
-    });
+    const year = new Date().getFullYear();
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>You're Invited</title></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:'Open Sans',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+
+        <!-- Logo bar -->
+        <tr>
+          <td align="center" style="padding-bottom:24px;">
+            <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#17458f;">
+              &#9670; ${clubName} &#9670;
+            </span>
+          </td>
+        </tr>
+
+        <!-- Card -->
+        <tr>
+          <td style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+            <!-- Header -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#17458f 0%,#0067c8 100%);padding:48px 40px 40px;text-align:center;">
+                  <div style="width:56px;height:56px;background:rgba(247,168,27,0.2);border:2px solid #f7a81b;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:24px;line-height:56px;display:block;">✉</span>
+                  </div>
+                  <h1 style="margin:0 0 8px;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.3px;">You're Invited!</h1>
+                  <p style="margin:0;color:rgba(255,255,255,0.8);font-size:14px;">Join the ${clubName} Member Portal</p>
+                </td>
+              </tr>
+              <!-- Gold accent -->
+              <tr><td style="background:#f7a81b;height:3px;"></td></tr>
+            </table>
+
+            <!-- Body -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:40px 40px 32px;">
+                  <p style="margin:0 0 20px;font-size:16px;color:#54565a;line-height:1.6;">
+                    Hi <strong style="color:#17458f;">${first_name}</strong>,
+                  </p>
+                  <p style="margin:0 0 16px;font-size:15px;color:#54565a;line-height:1.7;">
+                    An admin has invited you to join the <strong>${clubName}</strong> member portal — your hub for club events, announcements, resources, and more.
+                  </p>
+                  <p style="margin:0 0 32px;font-size:15px;color:#54565a;line-height:1.7;">
+                    Click below to set your password and activate your account.
+                  </p>
+
+                  <!-- CTA -->
+                  <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+                    <tr>
+                      <td style="background:#17458f;border-radius:8px;box-shadow:0 4px 12px rgba(23,69,143,0.3);">
+                        <a href="${actionLink}" style="display:inline-block;padding:16px 40px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:0.3px;border-radius:8px;">
+                          Accept Invitation &rarr;
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Info box -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="background:#f0f4fb;border-left:3px solid #17458f;border-radius:0 6px 6px 0;padding:14px 16px;">
+                        <p style="margin:0;font-size:13px;color:#54565a;line-height:1.6;">
+                          &#128274; This link expires in <strong>24 hours</strong>. If it expires, contact your admin for a new invitation.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Divider -->
+                  <hr style="border:none;border-top:1px solid #e8e8e8;margin:32px 0 24px;"/>
+
+                  <p style="margin:0 0 6px;font-size:12px;color:#898a8d;">If the button doesn't work, paste this link in your browser:</p>
+                  <p style="margin:0;font-size:11px;word-break:break-all;">
+                    <a href="${actionLink}" style="color:#0067c8;text-decoration:none;">${actionLink}</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:28px 16px 0;">
+            <p style="margin:0 0 4px;font-size:12px;color:#898a8d;">
+              &copy; ${year} ${clubName} &mdash; Service Above Self
+            </p>
+            <p style="margin:0;font-size:11px;color:#b1b1b1;">
+              You received this because an admin invited you. If this was unexpected, ignore this email.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
     const { error: emailError } = await sendViaBrevo(
       email,
