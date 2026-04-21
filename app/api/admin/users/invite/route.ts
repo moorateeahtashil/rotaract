@@ -144,7 +144,12 @@ export async function POST(req: NextRequest) {
     }
 
     const adminSupabase = createServiceRoleClient() as any;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    // Derive appUrl from the incoming request origin so it always matches the live domain,
+    // even if NEXT_PUBLIC_APP_URL is misconfigured (e.g. still set to localhost).
+    const origin = req.headers.get("origin") || req.headers.get("x-forwarded-host");
+    const appUrl = origin
+      ? origin.startsWith("http") ? origin : `https://${origin}`
+      : (process.env.NEXT_PUBLIC_APP_URL || "");
     const clubName = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
 
     // Check if this email already exists in auth.users

@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, KeyRound } from "lucide-react";
+import { Loader2, KeyRound, CheckCircle2 } from "lucide-react";
 import type { z } from "zod";
 
 export default function ResetPasswordPage() {
@@ -33,35 +33,26 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [done, setDone] = useState(false);
 
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: "", confirm_password: "" },
   });
 
-  // Supabase puts the token in the URL hash: #access_token=...&type=invite
-  // We need to let the client detect it and fire onAuthStateChange before showing the form.
   useEffect(() => {
     const supabase = createClient();
 
-    // Check if there's already an active session (e.g. direct navigation)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-        setChecking(false);
-      }
-    });
-
-    // Listen for the session being established from the URL hash tokens
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Invite flow fires SIGNED_IN; password-reset flow fires PASSWORD_RECOVERY
       if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
         setSessionReady(true);
         setChecking(false);
       }
     });
 
-    // Fallback: if no auth event fires after 3s, stop showing the spinner
-    const timeout = setTimeout(() => setChecking(false), 3000);
+    // Fallback: stop the spinner after 4s regardless
+    const timeout = setTimeout(() => setChecking(false), 4000);
 
     return () => {
       subscription.unsubscribe();
@@ -73,14 +64,17 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     try {
       const supabase = createClient();
+
       const { error } = await supabase.auth.updateUser({ password: values.password });
       if (error) throw error;
 
-      toast({
-        title: "Password set!",
-        description: "Your account is ready. Redirecting to login...",
-      });
-      setTimeout(() => router.push("/login"), 1500);
+      // Sign out the invite/recovery session so the user logs in fresh with their new password
+      await supabase.auth.signOut();
+
+      setDone(true);
+
+      // Redirect to login after a short delay
+      setTimeout(() => router.push("/login"), 2500);
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -98,6 +92,18 @@ export default function ResetPasswordPage() {
         <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-rotary-blue" />
           <p className="text-sm text-pewter">Verifying your invitation...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (done) {
+    return (
+      <Card className="w-full shadow-xl">
+        <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
+          <CheckCircle2 className="h-12 w-12 text-green-500" />
+          <p className="text-lg font-semibold text-charcoal">Password set!</p>
+          <p className="text-sm text-pewter">Redirecting you to login...</p>
         </CardContent>
       </Card>
     );
