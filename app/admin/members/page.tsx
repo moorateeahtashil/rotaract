@@ -213,7 +213,7 @@ export default function AdminMembersPage() {
       if (data.warning) {
         toast({ variant: "default", title: "Member added", description: data.message });
       } else {
-        toast({ variant: "success", title: "Invited!", description: `An invitation has been sent to ${createForm.email}` });
+        toast({ variant: "success", title: "Invitation sent!", description: data.message || `Invite sent to ${createForm.email}` });
       }
       setCreateDialogOpen(false);
       setCreateForm({ first_name: "", last_name: "", email: "", role: "member" });
