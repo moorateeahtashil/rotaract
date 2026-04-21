@@ -70,19 +70,8 @@ export default function LoginPage() {
           .eq("user_id", authData.user.id)
           .eq("is_active", true);
 
-        const ROLE_HIERARCHY: Record<string, number> = {
-          super_admin: 0, admin: 1, president: 2, secretary: 3,
-          public_image_director: 4, membership_director: 5,
-          project_director: 6, event_manager: 7, board_member: 8,
-          member: 9, applicant: 10, public: 11,
-        };
-
-        const highestRole = roles?.length
-          ? roles.reduce((min: string, r: { role: string }) =>
-              ROLE_HIERARCHY[r.role] < ROLE_HIERARCHY[min] ? r.role : min, "public")
-          : "public";
-
-        const isAdmin = ROLE_HIERARCHY[highestRole] <= ROLE_HIERARCHY["board_member"];
+        const ADMIN_SYSTEM_ROLES = ["super_admin", "admin"];
+        const isAdmin = roles?.some((r: { role: string }) => ADMIN_SYSTEM_ROLES.includes(r.role));
         router.push(isAdmin ? "/admin" : "/member");
       } else {
         router.push("/member");
