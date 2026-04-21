@@ -83,52 +83,16 @@ export default function AdminMembersPage() {
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
-    const supabase = createClient() as any;
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, first_name, last_name, email, created_at")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
-
-    if (!profiles) {
+    try {
+      const res = await fetch("/api/admin/members");
+      if (!res.ok) throw new Error("Failed to load members");
+      const data = await res.json();
+      setUsers(data);
+    } catch {
+      // silently fail — table stays empty
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data: allRoles } = await supabase
-      .from("user_roles")
-      .select("user_id, role")
-      .eq("is_active", true);
-
-    const { data: members } = await supabase
-      .from("members")
-      .select("user_id, status")
-      .is("deleted_at", null);
-
-    const roleMap: Record<string, string[]> = {};
-    allRoles?.forEach((r: any) => {
-      if (!roleMap[r.user_id]) roleMap[r.user_id] = [];
-      roleMap[r.user_id].push(r.role);
-    });
-
-    const memberMap: Record<string, string> = {};
-    members?.forEach((m: any) => {
-      memberMap[m.user_id] = m.status;
-    });
-
-    setUsers(
-      profiles.map((p: any) => ({
-        user_id: p.user_id,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        email: p.email,
-        roles: roleMap[p.user_id] || [],
-        member_status: memberMap[p.user_id],
-        created_at: p.created_at,
-      }))
-    );
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -138,34 +102,68 @@ export default function AdminMembersPage() {
   async function assignRole() {
     if (!selectedUser) return;
     setSaving(true);
+
+    const SYSTEM_ROLE_VALUES = ["super_admin", "admin"];
+    const ORG_ROLE_VALUES = ["board_member", "member", "prospective_member"];
+
+    const oldSystemRoles = selectedUser.roles.filter((r) => SYSTEM_ROLE_VALUES.includes(r));
+    const oldOrgRoles = selectedUser.roles.filter((r) => ORG_ROLE_VALUES.includes(r));
+
+    const isNoSystemRole = !newSystemRole || newSystemRole === "none" || newSystemRole === "normal";
+
     try {
-      const rolesToAssign: string[] = [];
-
-      // Add system role if selected (skip "none" and "normal" — those mean no system role)
-      if (newSystemRole && newSystemRole !== "none" && newSystemRole !== "normal") {
-        rolesToAssign.push(newSystemRole);
-      }
-
-      // Add org role
-      rolesToAssign.push(newOrgRole);
-
-      // Board members are also members
-      if (newOrgRole === "board_member" && !rolesToAssign.includes("member")) {
-        rolesToAssign.push("member");
-      }
-
-      for (const role of rolesToAssign) {
+      // ── System role ──────────────────────────────────────────
+      if (isNoSystemRole) {
+        // Remove any existing system roles
+        if (oldSystemRoles.length > 0) {
+          const res = await fetch("/api/admin/users/role", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: selectedUser.user_id, roles: oldSystemRoles }),
+          });
+          if (!res.ok) {
+            const d = await res.json();
+            throw new Error(d.error || "Failed to remove system role");
+          }
+        }
+      } else {
+        // Assign new system role, deactivate old ones
         const res = await fetch("/api/admin/users/role", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: selectedUser.user_id, role }),
+          body: JSON.stringify({
+            userId: selectedUser.user_id,
+            role: newSystemRole,
+            deactivateRoles: oldSystemRoles.filter((r) => r !== newSystemRole),
+          }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Failed to assign role: ${role}`);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || `Failed to assign ${newSystemRole}`);
       }
 
-      const assigned = rolesToAssign.join(", ");
-      toast({ variant: "success", title: "Roles assigned", description: `${selectedUser.first_name} has been assigned: ${assigned}` });
+      // ── Org role ─────────────────────────────────────────────
+      const orgRolesToAssign = [newOrgRole];
+      // board_member also gets member
+      if (newOrgRole === "board_member") orgRolesToAssign.push("member");
+
+      for (const role of orgRolesToAssign) {
+        const res = await fetch("/api/admin/users/role", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: selectedUser.user_id,
+            role,
+            // Deactivate old org roles on first call only
+            deactivateRoles: role === newOrgRole
+              ? oldOrgRoles.filter((r) => !orgRolesToAssign.includes(r))
+              : [],
+          }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || `Failed to assign ${role}`);
+      }
+
+      toast({ variant: "success", title: "Roles saved", description: `${selectedUser.first_name}'s roles have been updated.` });
       setRoleDialogOpen(false);
       await loadUsers();
     } catch (e: any) {

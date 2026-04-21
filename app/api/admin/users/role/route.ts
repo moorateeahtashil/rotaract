@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
-    const { userId, role } = await req.json();
+    const { userId, role, deactivateRoles } = await req.json();
 
     if (!userId || !role) {
       return NextResponse.json({ error: "userId and role are required" }, { status: 400 });
@@ -46,7 +46,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
-    // Upsert the role
+    // Deactivate old conflicting roles first (e.g. old system role before assigning new one)
+    if (Array.isArray(deactivateRoles) && deactivateRoles.length > 0) {
+      await service
+        .from("user_roles")
+        .update({ is_active: false })
+        .eq("user_id", userId)
+        .in("role", deactivateRoles);
+    }
+
+    // Upsert the new role
     const { error } = await service
       .from("user_roles")
       .upsert(
@@ -59,6 +68,51 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, message: `Role "${role}" assigned successfully` });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Internal error" }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/admin/users/role
+ * Deactivate specific roles for a user (used when setting "no system role")
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createServerClient() as any;
+    const service = createServiceRoleClient() as any;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: adminRoles } = await service
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+
+    const isAdmin = (adminRoles || []).some((r: any) => ["super_admin", "admin"].includes(r.role));
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { userId, roles } = await req.json();
+    if (!userId || !Array.isArray(roles) || roles.length === 0) {
+      return NextResponse.json({ error: "userId and roles[] are required" }, { status: 400 });
+    }
+
+    const { error } = await service
+      .from("user_roles")
+      .update({ is_active: false })
+      .eq("user_id", userId)
+      .in("role", roles);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Internal error" }, { status: 500 });
   }
