@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
           email,
           options: {
             data: { first_name, last_name },
-            redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
+            redirectTo: `${appUrl}/reset-password`,
           },
         });
 
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
       email,
       options: {
         data: { first_name, last_name },
-        redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
+        redirectTo: `${appUrl}/reset-password`,
       },
     });
 

@@ -43,16 +43,9 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // The auth/callback route already exchanged the PKCE code server-side and
-    // stored the session in cookies — so getSession() is the reliable check here.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-      }
-      setChecking(false);
-    });
-
-    // Also handle the legacy implicit flow (hash tokens) just in case
+    // Implicit flow: Supabase puts tokens in the URL hash (#access_token=...&type=invite).
+    // onAuthStateChange fires SIGNED_IN once the client parses those tokens.
+    // We must register the listener BEFORE calling getSession so we don't miss the event.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
         setSessionReady(true);
@@ -60,7 +53,21 @@ export default function ResetPasswordPage() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Also check for an existing cookie-based session (e.g. arrived via /auth/callback)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+        setChecking(false);
+      }
+    });
+
+    // Stop spinner after 5s if nothing fires
+    const timeout = setTimeout(() => setChecking(false), 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
