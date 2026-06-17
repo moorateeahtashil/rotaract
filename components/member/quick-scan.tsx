@@ -124,7 +124,7 @@ export function QuickScan() {
             <Button size="sm" variant="outline" onClick={stop}><CameraOff className="h-4 w-4 mr-1.5" /> Stop</Button>
           )}
           <form
-            className="flex items-center gap-2 flex-1 min-w-[200px]"
+            className="flex items-center gap-2 flex-1"
             onSubmit={(e) => { e.preventDefault(); if (manual.trim()) submit(parseToken(manual)).then((ok) => ok && setManual("")); }}
           >
             <input

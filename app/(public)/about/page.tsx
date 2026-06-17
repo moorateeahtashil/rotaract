@@ -42,7 +42,7 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="bg-gradient-to-br from-rotary-blue/5 to-azure/5 rounded-xl p-8">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-rotary-blue">184+</div>
                   <div className="text-sm text-pewter">Countries & Areas</div>

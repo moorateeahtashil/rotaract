@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, LogOut, Settings, ArrowLeft, LayoutDashboard } from "lucide-react";
+import { Bell, LogOut, Settings, ArrowLeft, LayoutDashboard, Menu } from "lucide-react";
 import Link from "next/link";
 
-export function AdminTopbar() {
+export function AdminTopbar({ onMenu }: { onMenu?: () => void }) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -26,7 +26,14 @@ export function AdminTopbar() {
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-white flex items-center justify-between px-4 lg:px-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <button
+          onClick={onMenu}
+          className="lg:hidden p-2 -ml-2 rounded-md text-charcoal hover:bg-gray-100"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <Link
           href="/"
           className="flex items-center gap-2 text-sm text-pewter hover:text-rotary-blue transition-colors"

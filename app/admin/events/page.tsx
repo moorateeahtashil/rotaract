@@ -430,7 +430,7 @@ export default function AdminEventsPage() {
             <DialogTitle>{editing ? "Edit Event" : "Add Event"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Title *</Label>
                 <Input
@@ -482,7 +482,7 @@ export default function AdminEventsPage() {
                 placeholder="Detailed information about the event..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Date *</Label>
                 <Input
@@ -533,7 +533,7 @@ export default function AdminEventsPage() {
               value={form.map_embed_url}
               onChange={(url) => setForm((f) => ({ ...f, map_embed_url: url }))}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Capacity</Label>
                 <Input

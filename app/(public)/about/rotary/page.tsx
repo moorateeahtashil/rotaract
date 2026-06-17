@@ -68,7 +68,7 @@ export default function AboutRotaryPage() {
       {/* Quick Stats */}
       <section className="py-16 bg-white border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { value: "1.4M+", label: "Members Worldwide", icon: Users },
               { value: "46,000+", label: "Clubs Globally", icon: Globe },

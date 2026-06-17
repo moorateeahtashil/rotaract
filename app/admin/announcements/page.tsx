@@ -263,7 +263,7 @@ export default function AdminAnnouncementsPage() {
                 placeholder="Write the announcement details..."
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Priority</Label>
                 <Select value={form.priority} onValueChange={(v) => setForm((f) => ({ ...f, priority: v as Announcement["priority"] }))}>

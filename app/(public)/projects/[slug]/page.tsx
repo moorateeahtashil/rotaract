@@ -87,7 +87,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {project.images && project.images.length > 0 && (
                 <div>
                   <h2 className="text-xl font-bold text-charcoal mb-4">Gallery</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {project.images.map((img: any) => (
                       <div key={img.id} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                         <img src={img.image_url} alt={img.caption || project.title} className="w-full h-full object-cover" />

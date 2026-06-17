@@ -61,7 +61,7 @@ export default async function AdminAuditLogPage() {
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {logs.map((log: any) => (
-                <div key={log.id} className="flex items-center gap-4 px-4 py-3 text-sm">
+                <div key={log.id} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 px-4 py-3 text-sm">
                   <Badge variant="outline" className={ACTION_COLORS[log.action] || "bg-gray-100 text-gray-700"}>
                     {log.action}
                   </Badge>
@@ -69,7 +69,7 @@ export default async function AdminAuditLogPage() {
                   <span className="text-pewter truncate">
                     by {log.user_id ? (nameById.get(log.user_id) || "Unknown") : "System"}
                   </span>
-                  <span className="text-pewter ml-auto whitespace-nowrap">
+                  <span className="text-pewter sm:ml-auto whitespace-nowrap text-xs">
                     {new Date(log.created_at).toLocaleString()}
                   </span>
                 </div>

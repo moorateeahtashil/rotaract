@@ -376,7 +376,7 @@ export default function AdminApplicationsPage() {
           </DialogHeader>
           {selectedApp && (
             <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-pewter text-xs uppercase tracking-wide">First Name</Label>
                   <p className="text-charcoal font-medium">{selectedApp.first_name}</p>

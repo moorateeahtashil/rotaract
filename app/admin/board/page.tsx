@@ -311,7 +311,7 @@ export default function AdminBoardPage() {
                 placeholder="e.g. Club President 2024–25"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Term Start *</Label>
                 <Input

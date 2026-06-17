@@ -233,7 +233,7 @@ export default function AdminSponsorsPage() {
               <Label>Club Name *</Label>
               <Input className="mt-1" value={form.club_name} onChange={(e) => setForm((f) => ({ ...f, club_name: e.target.value }))} placeholder="Rotary Club of ..." />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>District</Label>
                 <Input className="mt-1" value={form.district} onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))} placeholder="e.g. 9211" />
@@ -261,7 +261,7 @@ export default function AdminSponsorsPage() {
               <Label>Relationship / Message</Label>
               <Textarea className="mt-1" rows={2} value={form.relationship_text} onChange={(e) => setForm((f) => ({ ...f, relationship_text: e.target.value }))} placeholder="How they mentor/sponsor the club" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>President Name</Label>
                 <Input className="mt-1" value={form.president_name} onChange={(e) => setForm((f) => ({ ...f, president_name: e.target.value }))} />
@@ -275,7 +275,7 @@ export default function AdminSponsorsPage() {
               <Label>Website URL</Label>
               <Input className="mt-1" value={form.website_url} onChange={(e) => setForm((f) => ({ ...f, website_url: e.target.value }))} placeholder="https://" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Facebook</Label>
                 <Input className="mt-1" value={form.social_facebook} onChange={(e) => setForm((f) => ({ ...f, social_facebook: e.target.value }))} />

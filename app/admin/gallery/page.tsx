@@ -330,7 +330,7 @@ export default function AdminGalleryPage() {
                 <p className="text-sm text-pewter">No images yet. Upload some above.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {albumMedia.map((media) => (
                   <div key={media.id} className="relative group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

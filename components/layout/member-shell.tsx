@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/db/browser-client";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,8 @@ import {
   Shield,
   QrCode,
   ExternalLink,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +70,9 @@ export function MemberShell({
   const pathname = usePathname();
   const router = useRouter();
   const isAdmin = isAdminRole(highestRole);
+  const [mobileNav, setMobileNav] = useState(false);
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => { setMobileNav(false); }, [pathname]);
 
   const NAV_ITEMS = [
     { label: "Dashboard", href: "/member", icon: LayoutDashboard },
@@ -91,7 +97,14 @@ export function MemberShell({
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-40 h-16 border-b border-border bg-white flex items-center justify-between px-4 lg:px-6">
-        <div className="lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
+          <button
+            onClick={() => setMobileNav(true)}
+            className="p-2 -ml-2 rounded-md text-charcoal hover:bg-gray-100"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <Link href="/member" className="font-semibold text-charcoal">
             Member Portal
           </Link>
@@ -159,6 +172,55 @@ export function MemberShell({
           </DropdownMenu>
         </div>
       </header>
+
+      {/* Mobile nav drawer */}
+      {mobileNav && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileNav(false)} />
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-white shadow-xl flex flex-col">
+            <div className="flex h-16 items-center justify-between border-b border-border px-4">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-full bg-rotary-blue flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">R</span>
+                </div>
+                <span className="font-semibold text-charcoal text-sm">Member Portal</span>
+              </div>
+              <button onClick={() => setMobileNav(false)} className="p-2 rounded-md hover:bg-gray-100" aria-label="Close menu">
+                <X className="h-5 w-5 text-pewter" />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/member" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileNav(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                      isActive ? "bg-rotary-blue/10 text-rotary-blue" : "text-charcoal hover:bg-gray-100"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="border-t border-border p-3 space-y-1">
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setMobileNav(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-rotary-blue hover:bg-rotary-blue/10">
+                  <Shield className="h-5 w-5 flex-shrink-0" /> Admin Panel
+                </Link>
+              )}
+              <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-charcoal hover:bg-gray-100">
+                <LogOut className="h-5 w-5 flex-shrink-0" /> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex">
         {/* Sidebar */}
