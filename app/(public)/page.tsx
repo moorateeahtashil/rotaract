@@ -19,7 +19,7 @@ export const metadata = {
 function HeroSection({ section, tagline, clubName, heroBannerUrl, showTitle = true }: { section: any; tagline?: string; clubName?: string; heroBannerUrl?: string; showTitle?: boolean }) {
   const bannerImage = heroBannerUrl || section?.image_url;
   return (
-    <section className="relative min-h-screen flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
+    <section className={`relative min-h-screen flex bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden ${showTitle ? "items-center" : "items-end"}`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] bg-rotary-gold/10 rounded-full blur-3xl animate-pulse" />
@@ -31,8 +31,8 @@ function HeroSection({ section, tagline, clubName, heroBannerUrl, showTitle = tr
       )}
       <div className="absolute inset-0 bg-rotary-blue/40" />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
-        <div className="max-w-4xl">
+      <div className={`relative mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 ${showTitle ? "py-24 sm:py-32 lg:py-40" : "pb-16 sm:pb-24 pt-24"}`}>
+        <div className={showTitle ? "max-w-4xl" : "max-w-4xl mx-auto w-full text-center"}>
           {showTitle && (
             <>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -47,7 +47,7 @@ function HeroSection({ section, tagline, clubName, heroBannerUrl, showTitle = tr
               </p>
             </>
           )}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className={`flex flex-col sm:flex-row gap-4 ${showTitle ? "" : "justify-center"}`}>
             {section?.cta_label && (
               <Button asChild size="lg" className="bg-rotary-gold text-black hover:bg-rotary-gold/90 font-semibold px-8 h-12">
                 <Link href={section.cta_href || "/join"}>
