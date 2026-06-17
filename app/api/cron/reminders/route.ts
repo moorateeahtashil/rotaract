@@ -94,64 +94,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // ─── BOOKING REMINDERS ───
-    const { data: upcomingBookings } = await supabase
-      .from("bookings")
-      .select(
-        `
-        *,
-        member:members(
-          profile:profiles(first_name, last_name, email)
-        ),
-        booking_type:booking_types(name)
-      `
-      )
-      .gte("start_time", new Date().toISOString())
-      .lte("start_time", new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
-      .eq("status", "approved");
-
-    if (upcomingBookings) {
-      for (const booking of upcomingBookings) {
-        const profile = booking.member?.profile;
-        if (!profile?.email) continue;
-
-        // Check if already reminded
-        const { data: alreadySent } = await supabase
-          .from("reminder_logs")
-          .select("id")
-          .eq("entity_type", "booking")
-          .eq("entity_id", booking.id)
-          .eq("recipient_email", profile.email)
-          .gte("sent_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .limit(1);
-
-        if (alreadySent && alreadySent.length > 0) continue;
-
-        const result = await sendTemplateEmail(
-          "booking_confirmation",
-          profile.email,
-          {
-            first_name: profile.first_name,
-            booking_type: booking.booking_type?.name || "Meeting",
-            booking_time: new Date(booking.start_time).toLocaleString("en-IN"),
-          }
-        );
-
-        if (result.error) {
-          errors++;
-        } else {
-          processed++;
-          await logReminder(
-            "booking_24h_reminder",
-            "booking",
-            booking.id,
-            profile.email,
-            "sent"
-          );
-        }
-      }
-    }
-
     // ─── MEMBERSHIP FOLLOW-UP ───
     const { data: staleApplications } = await supabase
       .from("membership_applications")

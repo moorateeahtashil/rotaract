@@ -42,22 +42,26 @@ export default async function SponsorsPage() {
               {sponsors.map((sponsor: any) => (
                 <Card key={sponsor.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <div className="h-16 w-16 rounded-lg bg-rotary-blue/10 flex items-center justify-center mb-4">
+                    <div className="h-16 w-16 rounded-lg bg-rotary-blue/10 flex items-center justify-center mb-4 overflow-hidden">
                       {sponsor.logo_url ? (
-                        <img src={sponsor.logo_url} alt={sponsor.name} className="h-full w-full object-contain rounded-lg" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={sponsor.logo_url} alt={sponsor.club_name} className="h-full w-full object-contain rounded-lg" />
                       ) : (
                         <Building2 className="h-8 w-8 text-rotary-blue" />
                       )}
                     </div>
-                    <h3 className="text-lg font-semibold text-charcoal">{sponsor.name}</h3>
+                    <h3 className="text-lg font-semibold text-charcoal">{sponsor.club_name}</h3>
+                    {sponsor.district && (
+                      <p className="text-xs text-pewter">District {sponsor.district}</p>
+                    )}
                     {sponsor.description && (
                       <p className="text-sm text-pewter">{sponsor.description}</p>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {sponsor.website && (
+                    {sponsor.website_url && (
                       <a
-                        href={sponsor.website}
+                        href={sponsor.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-rotary-blue hover:underline"
@@ -66,14 +70,14 @@ export default async function SponsorsPage() {
                         Visit Website
                       </a>
                     )}
-                    {sponsor.meeting_info && (
+                    {sponsor.president_name && (
                       <div className="text-sm text-pewter">
-                        <strong>Meetings:</strong> {sponsor.meeting_info}
+                        <strong>President:</strong> {sponsor.president_name}
                       </div>
                     )}
-                    {sponsor.message && (
+                    {sponsor.relationship_text && (
                       <blockquote className="text-sm italic text-charcoal/70 border-l-2 border-rotary-gold pl-3">
-                        "{sponsor.message}"
+                        {sponsor.relationship_text}
                       </blockquote>
                     )}
                   </CardContent>

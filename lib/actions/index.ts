@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/db/server";
 import { requireAuth, requireAdmin } from "@/lib/auth/guards";
 import { slugify } from "@/lib/utils";
+import { sendBrevoEmail, adminNotifyEmail } from "@/lib/email";
 
 // ============================================================
 // CONTACT INQUIRY
@@ -42,8 +43,28 @@ export async function submitContactInquiry(data: {
       return { success: false, error: error.message };
     }
 
-    // TODO: Send email notification to admin
-    // TODO: Send acknowledgment email to user
+    // Notify admin + acknowledge the sender (fire-and-forget; never block).
+    const club = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
+    const adminTo = adminNotifyEmail();
+    if (adminTo) {
+      void sendBrevoEmail({
+        to: adminTo,
+        subject: `New contact inquiry: ${data.subject}`,
+        html: `<h2>New contact inquiry</h2>
+          <p><strong>From:</strong> ${data.first_name} ${data.last_name} (${data.email}${data.phone ? `, ${data.phone}` : ""})</p>
+          <p><strong>Type:</strong> ${data.inquiry_type || "general"}</p>
+          <p><strong>Subject:</strong> ${data.subject}</p>
+          <p><strong>Message:</strong></p><p>${data.message.replace(/\n/g, "<br/>")}</p>`,
+      });
+    }
+    void sendBrevoEmail({
+      to: data.email,
+      subject: `We received your message — ${club}`,
+      html: `<p>Hi ${data.first_name},</p>
+        <p>Thanks for reaching out to ${club}. We've received your message and will get back to you soon.</p>
+        <p><em>"${data.subject}"</em></p>
+        <p>— The ${club} Team</p>`,
+    });
 
     return { success: true };
   } catch (err: any) {
@@ -92,8 +113,28 @@ export async function submitMembershipApplication(data: {
       return { success: false, error: error.message };
     }
 
-    // TODO: Send email notification to membership director
-    // TODO: Send confirmation email to applicant
+    // Notify the membership team + confirm to the applicant (non-blocking).
+    const club = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
+    const adminTo = adminNotifyEmail();
+    if (adminTo) {
+      void sendBrevoEmail({
+        to: adminTo,
+        subject: `New membership application: ${data.first_name} ${data.last_name}`,
+        html: `<h2>New membership application</h2>
+          <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
+          <p><strong>Email:</strong> ${data.email}${data.phone ? ` · ${data.phone}` : ""}</p>
+          ${data.occupation ? `<p><strong>Occupation:</strong> ${data.occupation}${data.company ? ` at ${data.company}` : ""}</p>` : ""}
+          <p><strong>Why join:</strong></p><p>${(data.why_join || "").replace(/\n/g, "<br/>")}</p>
+          <p>Review it in the admin portal under Applications.</p>`,
+      });
+    }
+    void sendBrevoEmail({
+      to: data.email,
+      subject: `Application received — ${club}`,
+      html: `<p>Hi ${data.first_name},</p>
+        <p>Thank you for applying to join ${club}! Our membership team will review your application and be in touch soon.</p>
+        <p>— The ${club} Team</p>`,
+    });
 
     return { success: true };
   } catch (err: any) {

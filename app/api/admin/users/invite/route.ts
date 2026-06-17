@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceRoleClient } from "@/lib/db/server";
+import { ASSIGNABLE_ROLES, ROLE_HIERARCHY, highestRoleLevel } from "@/lib/auth/roles";
 
 async function sendViaBrevo(to: string, subject: string, html: string) {
   const apiKey = process.env.BREVO_API_KEY;
@@ -131,7 +132,8 @@ export async function POST(req: NextRequest) {
       .eq("is_active", true);
 
     const adminRoles = ["super_admin", "admin", "president", "secretary", "membership_director"];
-    const isAdmin = roles?.some((r: any) => adminRoles.includes(r.role));
+    const callerRoleNames: string[] = (roles || []).map((r: any) => r.role);
+    const isAdmin = callerRoleNames.some((r) => adminRoles.includes(r));
 
     if (!isAdmin) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
@@ -141,6 +143,22 @@ export async function POST(req: NextRequest) {
 
     if (!email || !first_name || !last_name) {
       return NextResponse.json({ error: "first_name, last_name, and email are required" }, { status: 400 });
+    }
+
+    // ─── Authorize the requested role (prevents privilege escalation) ───
+    // 1) Must be a known, assignable role.
+    if (!ASSIGNABLE_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+    // 2) Cannot grant a role MORE privileged than the inviter's own highest role.
+    //    (lower hierarchy number = more privilege)
+    const callerLevel = highestRoleLevel(callerRoleNames);
+    const targetLevel = ROLE_HIERARCHY[role] ?? ROLE_HIERARCHY.public;
+    if (targetLevel < callerLevel) {
+      return NextResponse.json(
+        { error: "You cannot assign a role higher than your own." },
+        { status: 403 }
+      );
     }
 
     const adminSupabase = createServiceRoleClient() as any;

@@ -1,34 +1,23 @@
 import { createServerClient } from "@/lib/db/server";
 import type { Database } from "@/lib/db/types";
+import {
+  ROLE_HIERARCHY,
+  ADMIN_ROLES,
+  BOARD_ROLES,
+  MEMBER_ROLES,
+  canAccessAdmin,
+  canAccessMemberPortal,
+  hasBoardPrivileges,
+} from "@/lib/auth/roles";
 
 type UserRole = Database["public"]["Enums"]["user_role_type"];
 
 // ─── Simplified RBAC ───
-// System roles (dashboard access): super_admin, admin
-// Standard system role (no dashboard): normal
-// Org roles (membership status): board_member, member, prospective_member
-// Legacy roles kept for backwards compat but mapped to board_member level
-
-const ROLE_HIERARCHY: Record<string, number> = {
-  // System roles
-  super_admin: 0,
-  admin: 1,
-  // Org roles
-  board_member: 2,
-  member: 3,
-  prospective_member: 4,
-  normal: 5,
-  // Legacy org roles (treat as board_member)
-  president: 2,
-  secretary: 2,
-  public_image_director: 2,
-  membership_director: 2,
-  project_director: 2,
-  event_manager: 2,
-  // Legacy pending role
-  applicant: 4,
-  public: 5,
-};
+// Role hierarchy + access predicates now live in lib/auth/roles.ts
+// (edge-safe, shared with middleware) and are re-exported below for
+// backwards compatibility with existing imports.
+export { ROLE_HIERARCHY, ADMIN_ROLES, BOARD_ROLES, MEMBER_ROLES };
+export { canAccessAdmin, canAccessMemberPortal, hasBoardPrivileges };
 
 export async function getSession() {
   const supabase = await createServerClient() as any;
@@ -130,57 +119,6 @@ function getHighestRoleSync(roles: UserRole[]): UserRole {
       ? current
       : highest;
   }, "public");
-}
-
-// Roles that can access the Admin Dashboard
-export const ADMIN_ROLES: string[] = [
-  "super_admin",
-  "admin",
-];
-
-// Roles that have board/elevated privileges (internal members section, project/event creation)
-export const BOARD_ROLES: string[] = [
-  "super_admin",
-  "admin",
-  "board_member",
-  // Legacy board roles
-  "president",
-  "secretary",
-  "public_image_director",
-  "membership_director",
-  "project_director",
-  "event_manager",
-];
-
-// Roles that can access the member portal
-export const MEMBER_ROLES: string[] = [
-  "super_admin",
-  "admin",
-  "board_member",
-  "member",
-  "prospective_member",
-  // Legacy board roles
-  "president",
-  "secretary",
-  "public_image_director",
-  "membership_director",
-  "project_director",
-  "event_manager",
-];
-
-// Helper to check dashboard access
-export function canAccessAdmin(roles: string[]): boolean {
-  return roles.some((r) => ADMIN_ROLES.includes(r));
-}
-
-// Helper to check member portal access
-export function canAccessMemberPortal(roles: string[]): boolean {
-  return roles.some((r) => MEMBER_ROLES.includes(r));
-}
-
-// Helper to check board member privileges
-export function hasBoardPrivileges(roles: string[]): boolean {
-  return roles.some((r) => BOARD_ROLES.includes(r));
 }
 
 // Helper to check if user is pending approval

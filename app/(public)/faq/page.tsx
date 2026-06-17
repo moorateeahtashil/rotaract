@@ -1,12 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle } from "lucide-react";
+import { createServerClient } from "@/lib/db/server";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Frequently Asked Questions",
   description: "Find answers to common questions about our Rotaract club, membership, events, and more.",
 };
 
-const FAQ_CATEGORIES = [
+// Fallback content shown only when no FAQs have been added in the admin yet,
+// so the page is never empty.
+const FALLBACK_CATEGORIES = [
   {
     category: "About Rotaract",
     faqs: [
@@ -20,30 +24,35 @@ const FAQ_CATEGORIES = [
     faqs: [
       { q: "Who can join?", a: "Anyone between ages 18-30 who is passionate about community service, leadership development, and making a positive impact." },
       { q: "Is there a membership fee?", a: "Most clubs have a nominal annual fee that covers Rotary International dues and club operations. Contact us for specific amounts." },
-      { q: "What is the time commitment?", a: "We recommend attending at least one meeting per month and participating in several projects per year. You can be as involved as your schedule allows." },
-      { q: "Do I need to attend a meeting before joining?", a: "While not required, attending a meeting or event is a great way to learn about our club and meet members before applying." },
-      { q: "Can I be a member of both Rotaract and Rotary?", a: "Yes! Many Rotaractors transition to Rotary after age 30, and some hold dual membership." },
-    ],
-  },
-  {
-    category: "Events & Projects",
-    faqs: [
-      { q: "Do I need to attend every event?", a: "No — participate in the events and projects that interest you and fit your schedule." },
-      { q: "Can non-members attend events?", a: "Many of our events are open to the public. Check individual event pages for details." },
-      { q: "How can I volunteer for a project?", a: "Sign up through our website or contact our project director. We welcome both members and non-member volunteers." },
-      { q: "Do you host social events?", a: "Yes! We organize fellowship events, dinners, and recreational activities to build camaraderie among members." },
-    ],
-  },
-  {
-    category: "Leadership",
-    faqs: [
-      { q: "How can I take on a leadership role?", a: "Active members can run for board positions or lead committees. Leadership elections typically happen annually." },
-      { q: "What board positions are available?", a: "Common positions include President, Vice President, Secretary, Treasurer, and various directors (Membership, Projects, Public Image, etc.)." },
+      { q: "What is the time commitment?", a: "We recommend attending at least one meeting per month and participating in several projects per year." },
     ],
   },
 ];
 
-export default function FAQPage() {
+type FaqGroup = { category: string; faqs: { q: string; a: string }[] };
+
+export default async function FAQPage() {
+  const supabase = await createServerClient() as any;
+  const { data: rows } = await supabase
+    .from("faqs")
+    .select("question, answer, category, sort_order, is_visible")
+    .eq("is_visible", true)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
+
+  let groups: FaqGroup[];
+  if (rows && rows.length > 0) {
+    const byCat = new Map<string, { q: string; a: string }[]>();
+    for (const r of rows as any[]) {
+      const cat = r.category?.trim() || "General";
+      if (!byCat.has(cat)) byCat.set(cat, []);
+      byCat.get(cat)!.push({ q: r.question, a: r.answer });
+    }
+    groups = Array.from(byCat.entries()).map(([category, faqs]) => ({ category, faqs }));
+  } else {
+    groups = FALLBACK_CATEGORIES;
+  }
+
   return (
     <div>
       {/* Hero */}
@@ -60,7 +69,7 @@ export default function FAQPage() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-10">
-            {FAQ_CATEGORIES.map((cat) => (
+            {groups.map((cat) => (
               <div key={cat.category}>
                 <h2 className="text-xl font-bold text-charcoal mb-4 flex items-center gap-2">
                   <HelpCircle className="h-5 w-5 text-rotary-blue" />
@@ -95,7 +104,7 @@ export default function FAQPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-charcoal mb-4">Still Have Questions?</h2>
           <p className="text-pewter mb-6 max-w-xl mx-auto">
-            Don't hesitate to reach out. We're always happy to help.
+            Don&apos;t hesitate to reach out. We&apos;re always happy to help.
           </p>
           <a
             href="/contact"

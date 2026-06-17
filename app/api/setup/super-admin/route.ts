@@ -9,6 +9,18 @@ import { createServiceRoleClient } from "@/lib/db/server";
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient() as any;
+
+    // Optional hard gate: if SETUP_SECRET is configured, require it. This
+    // prevents a "land-grab" on a fresh deploy before the first super_admin
+    // exists. The no-super_admin-yet self-gate below still applies regardless.
+    const setupSecret = process.env.SETUP_SECRET;
+    if (setupSecret) {
+      const provided = req.headers.get("x-setup-secret");
+      if (provided !== setupSecret) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
     const { email } = await req.json();
 
     if (!email) {

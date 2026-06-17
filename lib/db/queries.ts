@@ -479,8 +479,7 @@ export async function getSponsorClub() {
     .from("sponsor_club")
     .select("*")
     .eq("is_active", true)
-    .is("deleted_at", null)
-    .order("name", { ascending: true });
+    .order("club_name", { ascending: true });
   return (data ?? []) as any[];
 }
 

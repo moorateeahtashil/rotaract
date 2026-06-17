@@ -80,7 +80,7 @@ export default function AdminProjectsPage() {
         .from("projects")
         .select(`
           id, title, slug, description, status, start_date, end_date,
-          location, is_featured, is_published, avenue_id,
+          location, is_featured, is_published, avenue_id, event_id,
           avenue:avenues(id, name, slug)
         `)
         .is("deleted_at", null)
@@ -148,11 +148,38 @@ export default function AdminProjectsPage() {
       if (editing) {
         const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
         if (error) throw error;
+        // Keep the linked attendance event's basics in sync.
+        if ((editing as any).event_id) {
+          await supabase.from("events").update({
+            title: payload.title,
+            date: payload.start_date || undefined,
+            end_date: payload.end_date || null,
+            location: payload.location,
+            updated_at: new Date().toISOString(),
+          }).eq("id", (editing as any).event_id);
+        }
         toast({ variant: "success", title: "Updated", description: "Project updated." });
       } else {
-        const { error } = await supabase.from("projects").insert(payload);
+        const { data: created, error } = await supabase.from("projects").insert(payload).select("id").single();
         if (error) throw error;
-        toast({ variant: "success", title: "Created", description: "Project created." });
+        // A project is also an attendable event — create a linked event so it
+        // appears in Attendance and counts toward member requirements.
+        try {
+          const { data: ev } = await supabase.from("events").insert({
+            title: payload.title,
+            slug: `${slug}-event-${Date.now().toString(36)}`,
+            description: payload.description || payload.title,
+            event_type: "Project",
+            date: payload.start_date || new Date().toISOString().split("T")[0],
+            end_date: payload.end_date || null,
+            location: payload.location,
+            status: "published",
+            is_public: true,
+            project_id: created.id,
+          }).select("id").single();
+          if (ev) await supabase.from("projects").update({ event_id: ev.id }).eq("id", created.id);
+        } catch { /* non-fatal: project still created */ }
+        toast({ variant: "success", title: "Created", description: "Project created (with an attendance event)." });
       }
       setDialogOpen(false);
       load();

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Rotaract Platform — User Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1f2733; font-size: 11.5px; line-height: 1.55; margin: 0; }
+  h1, h2, h3, h4 { color: #17458f; line-height: 1.25; }
+  h1 { font-size: 30px; margin: 0 0 6px; }
+  h2 { font-size: 20px; margin: 26px 0 8px; padding-bottom: 5px; border-bottom: 2px solid #f7a81b; page-break-after: avoid; }
+  h3 { font-size: 15px; margin: 16px 0 5px; color: #0067c8; page-break-after: avoid; }
+  h4 { font-size: 12.5px; margin: 12px 0 3px; color: #1f2733; }
+  p { margin: 5px 0; }
+  ul, ol { margin: 5px 0 8px; padding-left: 20px; }
+  li { margin: 2px 0; }
+  code { background: #eef2fb; color: #17458f; padding: 1px 5px; border-radius: 4px; font-size: 10.5px; }
+  .cover { text-align: center; padding: 80px 0 40px; page-break-after: always; }
+  .cover .badge { display:inline-block; width:74px; height:74px; line-height:74px; border-radius:50%; background:#17458f; color:#fff; font-size:34px; font-weight:700; margin-bottom:18px; }
+  .cover .sub { color:#54565a; font-size:14px; margin-top:8px; }
+  .cover .tag { display:inline-block; margin-top:18px; padding:5px 14px; border:1px solid #f7a81b; border-radius:20px; color:#a87410; font-size:11px; letter-spacing:1px; text-transform:uppercase; }
+  .note { background:#f0f4fb; border-left:3px solid #17458f; padding:8px 12px; border-radius:0 6px 6px 0; margin:8px 0; }
+  .warn { background:#fff7e6; border-left:3px solid #f7a81b; padding:8px 12px; border-radius:0 6px 6px 0; margin:8px 0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0; font-size:10px; }
+  th, td { border:1px solid #d9e0ec; padding:5px 7px; text-align:left; vertical-align:top; }
+  th { background:#17458f; color:#fff; font-weight:600; }
+  tr:nth-child(even) td { background:#f6f8fc; }
+  td.c { text-align:center; }
+  .pill { display:inline-block; padding:1px 7px; border-radius:10px; font-size:9.5px; font-weight:600; }
+  .p0 { background:#fde2e4; color:#a01724; } .p1 { background:#ffe9cc; color:#9a5b00; }
+  .p2 { background:#dbeafe; color:#1e4f9c; } .p3 { background:#dcfce7; color:#1a7f43; } .p4 { background:#eee; color:#555; }
+  .toc a { color:#17458f; text-decoration:none; } .toc li { margin:3px 0; }
+  .section { page-break-before: always; }
+  .muted { color:#6b7280; }
+  footer { margin-top:30px; border-top:1px solid #d9e0ec; padding-top:8px; color:#9aa3b2; font-size:10px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="badge">R</div>
+  <h1>Rotaract Club Platform</h1>
+  <div class="sub">Complete User Guide</div>
+  <div class="sub muted">For Administrators, Members &amp; Prospective Members</div>
+  <div class="tag">Service Above Self</div>
+  <p class="muted" style="margin-top:40px;font-size:10px;">Covers the public website, the member portal, and the admin portal —<br/>roles &amp; access, the membership pathway, and event attendance.</p>
+</div>
+
+<h2>Contents</h2>
+<ol class="toc">
+  <li><a href="#overview">Platform Overview</a></li>
+  <li><a href="#roles">Roles &amp; Access Control</a></li>
+  <li><a href="#getting-started">Getting Started: Sign Up &amp; Log In</a></li>
+  <li><a href="#prospective">Guide for Prospective Members</a></li>
+  <li><a href="#member">Guide for Members</a></li>
+  <li><a href="#admin">Guide for Administrators</a></li>
+  <li><a href="#attendance">Event Attendance &amp; QR Check-in</a></li>
+  <li><a href="#requirements">Membership Requirements &amp; Promotion</a></li>
+  <li><a href="#troubleshooting">Troubleshooting &amp; FAQ</a></li>
+</ol>
+
+<!-- OVERVIEW -->
+<div class="section" id="overview">
+<h2>1. Platform Overview</h2>
+<p>The platform has three parts:</p>
+<table>
+  <tr><th>Area</th><th>Who</th><th>What</th></tr>
+  <tr><td><strong>Public Website</strong></td><td>Everyone (no login)</td><td>Home, About, Events, Projects, News, Gallery, Avenues of Service, Sponsors, FAQ, Contact, and the membership Join form.</td></tr>
+  <tr><td><strong>Member Portal</strong> <code>/member</code></td><td>Members &amp; Prospective Members</td><td>Dashboard (with QR check-in), profile, events, attendance, announcements, member directory, resources.</td></tr>
+  <tr><td><strong>Admin Portal</strong> <code>/admin</code></td><td>Admins &amp; Super Admins</td><td>Full management of people, programs, content, media, attendance, analytics, users &amp; roles, audit log.</td></tr>
+</table>
+<div class="note">After login you're routed automatically: admins → Admin Portal; members &amp; prospective members → Member Portal.</div>
+</div>
+
+<!-- ROLES -->
+<div class="section" id="roles">
+<h2>2. Roles &amp; Access Control</h2>
+<p>Each user holds one or more <strong>roles</strong>, ranked by privilege (lower number = more access). Effective access follows the user's highest role.</p>
+<table>
+  <tr><th>Lvl</th><th>Role</th><th>Access</th></tr>
+  <tr><td class="c"><span class="pill p0">0</span></td><td><strong>Super Admin</strong></td><td>Everything, incl. managing other admins and deleting users.</td></tr>
+  <tr><td class="c"><span class="pill p1">1</span></td><td><strong>Admin</strong></td><td>Full Admin Portal + Member Portal.</td></tr>
+  <tr><td class="c"><span class="pill p2">2</span></td><td><strong>Board Member</strong> <span class="muted">(+ legacy: President, Secretary…)</span></td><td>Member Portal + elevated rights on some content.</td></tr>
+  <tr><td class="c"><span class="pill p3">3</span></td><td><strong>Member</strong></td><td>Full Member Portal; listed in the directory.</td></tr>
+  <tr><td class="c"><span class="pill p4">4</span></td><td><strong>Prospective Member</strong></td><td>Member Portal (dashboard, profile, events, attendance, announcements, directory, resources). Not yet in the directory; sees their membership progress.</td></tr>
+  <tr><td class="c"><span class="pill p4">5</span></td><td><strong>Normal / Public</strong></td><td>Public website only.</td></tr>
+</table>
+
+<h3>Access matrix</h3>
+<table>
+  <tr><th>Capability</th><th>Public</th><th>Prospective</th><th>Member</th><th>Board</th><th>Admin</th><th>Super</th></tr>
+  <tr><td>Public website</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+  <tr><td>Member portal + QR check-in</td><td class="c">—</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+  <tr><td>Membership progress card</td><td class="c">—</td><td class="c">✓</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>
+  <tr><td>Listed in directory</td><td class="c">—</td><td class="c">—</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td><td class="c">✓</td></tr>
+  <tr><td>Admin portal</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">✓</td><td class="c">✓</td></tr>
+  <tr><td>Mark attendance / set requirements / promote</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">✓</td><td class="c">✓</td></tr>
+  <tr><td>Manage admins / delete users</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">part</td><td class="c">✓</td></tr>
+</table>
+<div class="note">Access is enforced at three layers that share one definition: middleware (route guard), server layout guards, and database row-level security. An admin can never assign a role higher than their own; only a Super Admin creates Super Admins.</div>
+</div>
+
+<!-- GETTING STARTED -->
+<div class="section" id="getting-started">
+<h2>3. Getting Started</h2>
+<h3>Create an account</h3>
+<ol>
+  <li>Go to <code>/signup</code> (or click <strong>Join</strong> / <strong>Sign Up</strong>).</li>
+  <li>Enter name, email, password → submit.</li>
+  <li>You're signed in as a <strong>prospective member</strong> and taken to the Member Portal.</li>
+</ol>
+<h3>Log in / reset password</h3>
+<p>Log in at <code>/login</code>; use <strong>Forgot password</strong> to receive a reset link. Invited by an admin? Click <strong>Accept Invitation</strong> in the email to set a password and activate your account.</p>
+</div>
+
+<!-- PROSPECTIVE -->
+<div class="section" id="prospective">
+<h2>4. Guide for Prospective Members</h2>
+<p>You get the Member Portal while your membership is being earned/approved:</p>
+<ul>
+  <li><strong>Dashboard</strong> — a <strong>QR check-in</strong> card, announcements, upcoming events, and your <strong>membership progress</strong> (turns green as you meet each requirement).</li>
+  <li><strong>My Profile</strong> — photo, occupation, contact details.</li>
+  <li><strong>My Events</strong> — upcoming club events.</li>
+  <li><strong>Attendance</strong> — check in at events (camera QR or code).</li>
+  <li><strong>Announcements</strong>, <strong>Directory</strong>, <strong>Resources</strong>.</li>
+</ul>
+<div class="note">Attend the required events (see §8). When you've met all requirements your card turns green and an admin promotes you to full <strong>Member</strong> — at which point you also appear in the directory.</div>
+</div>
+
+<!-- MEMBER -->
+<div class="section" id="member">
+<h2>5. Guide for Members</h2>
+<h3>Dashboard</h3><p>QR check-in card, current announcements, upcoming events, quick stats.</p>
+<h3>Check in to an event</h3><p>On the dashboard (or the Attendance page) tap <strong>Scan QR</strong> and point at the event's QR code, or type the event code. Done instantly.</p>
+<h3>My Profile</h3><p>Update details/avatar; toggle directory visibility.</p>
+<h3>My Events</h3><p>Upcoming events with date, time, location.</p>
+<h3>Announcements / Directory / Resources</h3><p>Read club announcements; browse and search fellow members; download shared documents (public or member-only).</p>
+</div>
+
+<!-- ADMIN -->
+<div class="section" id="admin">
+<h2>6. Guide for Administrators</h2>
+<p>The Admin Portal (<code>/admin</code>) groups tools in the left sidebar. Most follow the same pattern: a list with <strong>Add</strong> / <strong>Edit</strong> / <strong>Delete</strong> and a dialog form.</p>
+<h3>People</h3>
+<h4>Members</h4><p>The roster. <strong>Add</strong> sends an email invite. <strong>Approve</strong> a prospect to make them a Member. Edit roles. Delete users.</p>
+<h4>Applications</h4><p>Public Join-form submissions. <strong>Approve</strong> invites &amp; onboards them as a Member (with email); <strong>Reject</strong> with notes.</p>
+<h4>Attendance</h4><p><strong>Mark Attendance</strong> — pick an event, tick who attended (members &amp; prospects). <strong>By Person</strong> — everyone's attendance; prospects show requirement progress + a green <strong>Ready</strong> badge and a <strong>Promote</strong> button. <strong>Requirements</strong> — set how many of each event type a prospect must attend.</p>
+<h4>Board Members &amp; Committees</h4><p>Board roster with positions; committees with a chair.</p>
+<h3>Program</h3>
+<h4>Events &amp; Event Types</h4><p>Create events with an image, date/time, location, capacity, status, and an <strong>event type</strong>. Each event has a <strong>QR button</strong> to generate its attendance code. Event Types are managed separately — six core types (Project, Fellowship, Professional Development, Club Meeting, Club Assembly, Board Meeting) are <strong>locked</strong> and cannot be deleted.</p>
+<h4>Projects</h4><p>Service projects. Creating a project also creates a linked <strong>Project</strong>-type event so it's attendable and counts toward requirements.</p>
+<h4>News &amp; Announcements</h4><p>Blog posts (publish toggle); member announcements (priority, expiry, publish).</p>
+<h3>Media &amp; Resources</h3>
+<h4>Gallery</h4><p>Albums + multi-image upload.</p>
+<h4>Resources</h4><p>Documents with access level (public / member-only / board-only).</p>
+<h4>FAQs</h4><p>Q&amp;A with category, order, visibility → shown on the public FAQ page.</p>
+<h4>Sponsors</h4><p>The sponsoring Rotary club(s) shown on the public Sponsors page.</p>
+<h3>Content</h3><p><strong>Site Settings</strong> (name, tagline, hero banner, logo, meeting info, social, footer, contact) · <strong>Rotary Highlights</strong> · <strong>Legal Pages</strong>.</p>
+<h3>Insights &amp; System</h3><p><strong>Analytics</strong> (live counts) · <strong>Users &amp; Roles</strong> (change any user's role) · <strong>Audit Log</strong>.</p>
+</div>
+
+<!-- ATTENDANCE -->
+<div class="section" id="attendance">
+<h2>7. Event Attendance &amp; QR Check-in</h2>
+<h3>Admin — generate the code</h3>
+<ol>
+  <li><code>Admin → Events</code> → click the <strong>QR button</strong> on an event.</li>
+  <li>A unique code (24-hour expiry) is created and linked to that event; a scannable QR + text code appears.</li>
+  <li>Display the QR (or code) at the venue. Generating a new code deactivates the old one.</li>
+</ol>
+<h3>Member / Prospective — check in</h3>
+<ol>
+  <li>On the <strong>Dashboard</strong> (or <code>Member → Attendance</code>) tap <strong>Scan QR</strong> and point at the code — or type it in the box.</li>
+  <li>Attendance is recorded against that event instantly.</li>
+</ol>
+<div class="warn"><strong>Ended events are closed.</strong> If an event has finished (status completed/cancelled, or past its end), check-in is refused. Camera scanning uses the browser's built-in reader; manual entry always works as a fallback.</div>
+<h3>Admin — manual adjustments</h3>
+<p><code>Admin → Attendance → Mark Attendance</code>: pick the event and tick anyone present or absent.</p>
+</div>
+
+<!-- REQUIREMENTS -->
+<div class="section" id="requirements">
+<h2>8. Membership Requirements &amp; Promotion</h2>
+<p>A prospective member becomes a full member by participating. Requirements are <strong>configurable per event type</strong>.</p>
+<h3>Set the requirements (admin)</h3>
+<p><code>Admin → Attendance → Requirements</code>: for each event type (Club Meeting, Fellowship, Project, etc.) set how many a prospect must attend, plus an optional "project lead roles" count. Set 0 to ignore a type.</p>
+<h3>How progress is tracked</h3>
+<ul>
+  <li>Every event has an <strong>event type</strong>. A prospect's attendance is grouped by type and compared to the requirements.</li>
+  <li>Prospects see this on their <strong>dashboard</strong>; admins see it under <strong>Attendance → By Person</strong>.</li>
+  <li>When all requirements are met → a green <strong>"All requirements met" / "Ready"</strong> indicator.</li>
+</ul>
+<h3>Promotion</h3>
+<p>An admin clicks <strong>Promote</strong> (on Attendance → By Person, or Approve on Members/Applications). This grants the <strong>Member</strong> role, creates the member record, and adds them to the directory.</p>
+</div>
+
+<!-- TROUBLESHOOTING -->
+<div class="section" id="troubleshooting">
+<h2>9. Troubleshooting &amp; FAQ</h2>
+<h3>A prospect can't see the portal</h3><p>Confirm they're signed in with the <code>prospective_member</code> role (Admin → Users &amp; Roles). Prospects are allowed into the portal by design.</p>
+<h3>"This event has ended" on check-in</h3><p>Expected — attendance closes when the event finishes. Admins can still set attendance manually under Attendance → Mark.</p>
+<h3>An attendance code doesn't work</h3><p>Codes expire after 24h and only one is active per event. Generate a fresh one from the event's QR button.</p>
+<h3>I approved someone but they're not a member</h3><p>Use <strong>Promote</strong> (Attendance → By Person) or <strong>Approve</strong> (Members). That assigns the Member role and creates the record server-side.</p>
+<h3>An admin save "doesn't stick"</h3><p>Ensure the database migrations (through 022) are applied — they add the admin write policies for sponsors, attendance, FAQs, and requirements.</p>
+<h3>Images not showing on the live site</h3><p>Storage buckets are public and serve correctly; if images don't render it's usually a stale deployment — redeploy the site.</p>
+<footer>Rotaract Club Platform — User Guide · Service Above Self</footer>
+</div>
+
+</body>
+</html>

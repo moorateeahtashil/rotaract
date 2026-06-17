@@ -24,6 +24,8 @@ import {
   PanelLeftOpen,
   ClipboardList,
   Tag,
+  Megaphone,
+  CalendarCheck,
 } from "lucide-react";
 
 const ADMIN_NAV = [
@@ -46,6 +48,7 @@ const ADMIN_NAV = [
     items: [
       { label: "Members", href: "/admin/members", icon: Users },
       { label: "Applications", href: "/admin/applications", icon: ClipboardList },
+      { label: "Attendance", href: "/admin/attendance", icon: CalendarCheck },
       { label: "Board Members", href: "/admin/board", icon: Shield },
       { label: "Committees", href: "/admin/committees", icon: Users },
     ],
@@ -57,6 +60,7 @@ const ADMIN_NAV = [
       { label: "Event Types", href: "/admin/event-types", icon: Tag },
       { label: "Projects", href: "/admin/projects", icon: FolderKanban },
       { label: "News", href: "/admin/news", icon: Newspaper },
+      { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
     ],
   },
   {

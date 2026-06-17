@@ -45,6 +45,56 @@ export async function sendEmail({
   }
 }
 
+/**
+ * Send an email via the Brevo HTTP API (the club's configured provider).
+ * Returns { error } and never throws — callers can fire-and-forget so a mail
+ * failure never blocks a form submission. No-ops (logs) if Brevo isn't set up.
+ */
+export async function sendBrevoEmail(opts: {
+  to: string | string[];
+  subject: string;
+  html: string;
+}): Promise<{ error: string | null }> {
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.BREVO_FROM_EMAIL;
+  const fromName = process.env.NEXT_PUBLIC_SITE_NAME || "Rotaract Club";
+
+  if (!apiKey || !fromEmail) {
+    console.warn("[Email] Brevo not configured. Email would have been sent:", {
+      to: opts.to,
+      subject: opts.subject,
+    });
+    return { error: null }; // mock success in dev
+  }
+
+  try {
+    const to = (Array.isArray(opts.to) ? opts.to : [opts.to]).map((email) => ({ email }));
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: { name: fromName, email: fromEmail },
+        to,
+        subject: opts.subject,
+        htmlContent: opts.html,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { error: err.message || "Brevo send failed" };
+    }
+    return { error: null };
+  } catch (e: any) {
+    console.error("[Email] Brevo send error:", e);
+    return { error: e?.message || "Brevo send error" };
+  }
+}
+
+/** Recipient for internal admin notifications (form submissions, etc.). */
+export function adminNotifyEmail(): string | null {
+  return process.env.ADMIN_NOTIFY_EMAIL || process.env.BREVO_FROM_EMAIL || null;
+}
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, "")

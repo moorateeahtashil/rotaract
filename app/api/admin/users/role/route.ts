@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
-    const { userId, role, deactivateRoles } = await req.json();
+    const { userId, role, deactivateRoles, ensureMemberRecord } = await req.json();
 
     if (!userId || !role) {
       return NextResponse.json({ error: "userId and role are required" }, { status: 400 });
@@ -65,6 +65,30 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Optionally create/activate the members row (used when approving an
+    // applicant into a full member). Done server-side with the service role
+    // because RLS forbids browser writes to members/user_roles.
+    if (ensureMemberRecord) {
+      const { data: existingMember } = await service
+        .from("members")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!existingMember) {
+        await service.from("members").insert({
+          user_id: userId,
+          join_date: new Date().toISOString().split("T")[0],
+          status: "active",
+        });
+      } else {
+        await service
+          .from("members")
+          .update({ status: "active", deleted_at: null })
+          .eq("user_id", userId);
+      }
     }
 
     return NextResponse.json({ success: true, message: `Role "${role}" assigned successfully` });

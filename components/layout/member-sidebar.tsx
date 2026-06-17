@@ -12,6 +12,7 @@ import {
   Megaphone,
   Users,
   FileText,
+  QrCode,
   LogOut,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ const MEMBER_NAV = [
   { label: "Dashboard", href: "/member", icon: LayoutDashboard },
   { label: "My Profile", href: "/member/profile", icon: User },
   { label: "My Events", href: "/member/events", icon: Calendar },
+  { label: "Attendance", href: "/member/attendance", icon: QrCode },
   {
     label: "Announcements",
     href: "/member/announcements",

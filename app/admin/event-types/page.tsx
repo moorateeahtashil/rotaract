@@ -21,6 +21,7 @@ type EventType = {
   color_hex: string;
   is_active: boolean;
   sort_order: number;
+  is_system?: boolean;
 };
 
 function slugify(text: string) {
@@ -161,6 +162,9 @@ export default function EventTypesPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-charcoal text-sm">{type.name}</span>
+                        {type.is_system && (
+                          <Badge variant="outline" className="text-xs text-rotary-blue border-rotary-blue/30">Core</Badge>
+                        )}
                         {!type.is_active && (
                           <Badge variant="outline" className="text-xs text-gray-500">Inactive</Badge>
                         )}
@@ -171,25 +175,31 @@ export default function EventTypesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleActive(type)}
-                      className="text-xs text-pewter hover:text-charcoal"
-                    >
-                      {type.is_active ? "Deactivate" : "Activate"}
-                    </Button>
+                    {!type.is_system && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleActive(type)}
+                        className="text-xs text-pewter hover:text-charcoal"
+                      >
+                        {type.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => openEdit(type)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-cranberry hover:bg-cranberry/5"
-                      onClick={() => setDeleteDialog({ open: true, type })}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {type.is_system ? (
+                      <span className="text-[10px] text-pewter px-2" title="Core event type — cannot be deleted">Locked</span>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-cranberry hover:bg-cranberry/5"
+                        onClick={() => setDeleteDialog({ open: true, type })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

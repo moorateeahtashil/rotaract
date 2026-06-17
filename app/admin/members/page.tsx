@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/db/browser-client";
 
 // ── System Roles (Dashboard Access) ──
 const SYSTEM_ROLES = [
@@ -182,40 +181,22 @@ export default function AdminMembersPage() {
 
   async function approveApplicant(user: UserRecord) {
     setSaving(true);
-    const supabase = createClient() as any;
     try {
-      // Deactivate prospective_member and applicant (legacy) roles
-      await supabase
-        .from("user_roles")
-        .update({ is_active: false })
-        .eq("user_id", user.user_id)
-        .in("role", ["prospective_member", "applicant"]);
-
-      const { error } = await supabase.from("user_roles").upsert(
-        { user_id: user.user_id, role: "member", is_active: true },
-        { onConflict: "user_id,role" }
-      );
-      if (error) throw error;
-
-      // Create member record if it doesn't exist
-      const { data: existingMember } = await supabase
-        .from("members")
-        .select("id")
-        .eq("user_id", user.user_id)
-        .single();
-
-      if (!existingMember) {
-        await supabase.from("members").insert({
-          user_id: user.user_id,
-          join_date: new Date().toISOString().split("T")[0],
-          status: "active",
-        });
-      } else {
-        await supabase
-          .from("members")
-          .update({ status: "active" })
-          .eq("user_id", user.user_id);
-      }
+      // Route through the server API (service role) — browser writes to
+      // user_roles/members are blocked by RLS. This assigns the member role,
+      // deactivates the pending roles, and creates the members record.
+      const res = await fetch("/api/admin/users/role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.user_id,
+          role: "member",
+          deactivateRoles: ["prospective_member", "applicant"],
+          ensureMemberRecord: true,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to approve applicant");
 
       toast({ variant: "success", title: "Approved!", description: `${user.first_name} ${user.last_name} is now a member.` });
       setApproveDialog({ open: false });
@@ -229,7 +210,6 @@ export default function AdminMembersPage() {
 
   async function createMember() {
     setSaving(true);
-    const supabase = createClient() as any;
     try {
       // We use the admin API endpoint to invite user
       const res = await fetch("/api/admin/users/invite", {

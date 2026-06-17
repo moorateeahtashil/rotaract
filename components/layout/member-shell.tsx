@@ -18,7 +18,6 @@ import {
   LayoutDashboard,
   User,
   Calendar,
-  KeyRound,
   Megaphone,
   Users,
   FileText,
@@ -76,7 +75,6 @@ export function MemberShell({
     { label: "Attendance", href: "/member/attendance", icon: QrCode },
     { label: "Announcements", href: "/member/announcements", icon: Megaphone },
     { label: "Directory", href: "/member/directory", icon: Users },
-    { label: "Bookings", href: "/member/bookings", icon: KeyRound },
     { label: "Resources", href: "/member/resources", icon: FileText },
   ];
 

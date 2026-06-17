@@ -1,17 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-// System roles that grant admin dashboard access
-const ADMIN_SYSTEM_ROLES = ["super_admin", "admin"];
-
-// Org roles (and legacy roles) that grant member portal access
-const MEMBER_ACCESS_ROLES = [
-  "super_admin", "admin",
-  "board_member", "member",
-  // Legacy board roles — treated as board_member
-  "president", "secretary", "public_image_director",
-  "membership_director", "project_director", "event_manager",
-];
+// Shared, edge-safe role predicates — single source of truth (lib/auth/roles.ts).
+// MEMBER_ROLES here INCLUDES prospective_member so they reach the member portal.
+import { canAccessAdmin, canAccessMemberPortal } from "@/lib/auth/roles";
 
 async function getUserRoles(supabase: any, userId: string): Promise<string[]> {
   const { data: roles } = await supabase
@@ -21,14 +12,6 @@ async function getUserRoles(supabase: any, userId: string): Promise<string[]> {
     .eq("is_active", true);
 
   return roles?.map((r: { role: string }) => r.role) ?? [];
-}
-
-function canAccessAdmin(roles: string[]): boolean {
-  return roles.some((r) => ADMIN_SYSTEM_ROLES.includes(r));
-}
-
-function canAccessMemberPortal(roles: string[]): boolean {
-  return roles.some((r) => MEMBER_ACCESS_ROLES.includes(r));
 }
 
 export async function middleware(request: NextRequest) {

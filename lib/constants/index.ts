@@ -171,7 +171,7 @@ export const MEMBER_ROUTES = [
   "/member",
   "/member/profile",
   "/member/events",
-  "/member/bookings",
+  "/member/attendance",
   "/member/announcements",
   "/member/directory",
   "/member/resources",

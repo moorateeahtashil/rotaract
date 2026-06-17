@@ -114,6 +114,31 @@ export default function AdminApplicationsPage() {
 
       if (!profile) throw new Error("Profile not found");
 
+      let inviteWarning = "";
+
+      // On approval, actually onboard the applicant: invite them so an account
+      // is created with the `member` role + members record, and a welcome email
+      // is sent. The invite API is idempotent for already-existing users.
+      if (action === "approve") {
+        try {
+          const res = await fetch("/api/admin/users/invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              first_name: reviewDialog.app.first_name,
+              last_name: reviewDialog.app.last_name,
+              email: reviewDialog.app.email,
+              role: "member",
+            }),
+          });
+          const d = await res.json();
+          if (!res.ok) inviteWarning = d.error || "could not send invite";
+          else if (d.warning) inviteWarning = d.message || "";
+        } catch (e: any) {
+          inviteWarning = e.message || "could not send invite";
+        }
+      }
+
       const { error } = await supabase
         .from("membership_applications")
         .update({
@@ -121,15 +146,21 @@ export default function AdminApplicationsPage() {
           reviewed_at: new Date().toISOString(),
           admin_notes: reviewNotes || null,
           status: action === "approve" ? "approved" : "rejected",
+          ...(action === "approve" && !inviteWarning ? { invite_sent_at: new Date().toISOString() } : {}),
         })
         .eq("id", reviewDialog.app.id);
 
       if (error) throw error;
 
       toast({
-        variant: "success",
+        variant: inviteWarning ? "default" : "success",
         title: action === "approve" ? "Application Approved" : "Application Rejected",
-        description: `${reviewDialog.app.first_name} ${reviewDialog.app.last_name}'s application has been ${action === "approve" ? "approved" : "rejected"}.`,
+        description:
+          action === "approve"
+            ? inviteWarning
+              ? `Approved, but the invite needs attention: ${inviteWarning}`
+              : `${reviewDialog.app.first_name} ${reviewDialog.app.last_name} has been approved and invited to the portal.`
+            : `${reviewDialog.app.first_name} ${reviewDialog.app.last_name}'s application has been rejected.`,
       });
 
       setReviewDialog({ open: false });

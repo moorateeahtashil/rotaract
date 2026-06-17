@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Calendar, MapPin, ExternalLink, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Calendar, MapPin, ExternalLink, X, QrCode, Copy } from "lucide-react";
 
 type Event = {
   id: string;
@@ -185,6 +185,23 @@ export default function AdminEventsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [qr, setQr] = useState<{ open: boolean; loading: boolean; title?: string; token?: string; expires?: string }>({ open: false, loading: false });
+
+  async function generateCode(ev: Event) {
+    setQr({ open: true, loading: true });
+    try {
+      const res = await fetch("/api/admin/qr/generate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventSlug: ev.slug, expiryHours: 24 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate code");
+      setQr({ open: true, loading: false, title: ev.title, token: data.token, expires: data.expires_at });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+      setQr({ open: false, loading: false });
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -390,6 +407,9 @@ export default function AdminEventsPage() {
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
+                    <Button size="sm" variant="outline" onClick={() => generateCode(ev)} title="Attendance QR code">
+                      <QrCode className="h-3.5 w-3.5" />
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => openEdit(ev)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -577,6 +597,43 @@ export default function AdminEventsPage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Attendance QR code */}
+      <Dialog open={qr.open} onOpenChange={(o) => setQr((q) => ({ ...q, open: o }))}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Attendance Code{qr.title ? ` — ${qr.title}` : ""}</DialogTitle>
+          </DialogHeader>
+          {qr.loading ? (
+            <p className="text-sm text-pewter py-6 text-center">Generating…</p>
+          ) : qr.token ? (
+            <div className="space-y-4 text-center">
+              {/* QR encodes the token; members scan it on their Attendance page */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qr.token)}`}
+                alt="Attendance QR code"
+                className="mx-auto rounded-lg border border-border"
+                width={240}
+                height={240}
+              />
+              <div>
+                <p className="text-xs text-pewter mb-1">Or enter this code manually:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <code className="text-sm bg-gray-100 px-2 py-1 rounded">{qr.token}</code>
+                  <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(qr.token!); toast({ variant: "success", title: "Copied" }); }}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+              {qr.expires && (
+                <p className="text-xs text-pewter">Expires {new Date(qr.expires).toLocaleString()}</p>
+              )}
+              <p className="text-xs text-pewter">Display this at the event. Members scan it (or type the code) on their Attendance page to check in. Generating a new code deactivates the old one.</p>
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>
