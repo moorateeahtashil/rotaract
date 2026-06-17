@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, Search, Shield, UserCheck, User, Users, CheckCircle, RefreshCw, Trash2, Pencil } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 // ── System Roles (Dashboard Access) ──
@@ -47,6 +48,9 @@ type UserRecord = {
   email: string;
   roles: string[];
   member_status?: string;
+  join_date?: string | null;
+  classification?: string | null;
+  show_in_directory?: boolean | null;
   created_at: string;
 };
 
@@ -67,6 +71,8 @@ export default function AdminMembersPage() {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [approveDialog, setApproveDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
+  const [editDialog, setEditDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
+  const [editForm, setEditForm] = useState({ first_name: "", last_name: "", classification: "", join_date: "", show_in_directory: true });
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [newSystemRole, setNewSystemRole] = useState<string>("");
   const [newOrgRole, setNewOrgRole] = useState<string>("member");
@@ -171,6 +177,38 @@ export default function AdminMembersPage() {
       if (!res.ok) throw new Error(data.error || "Failed to delete user");
       toast({ variant: "success", title: "User deleted", description: `${user.first_name} ${user.last_name} has been removed.` });
       setDeleteDialog({ open: false });
+      await loadUsers();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openEdit(user: UserRecord) {
+    setEditForm({
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
+      classification: user.classification || "",
+      join_date: user.join_date ? user.join_date.slice(0, 10) : "",
+      show_in_directory: user.show_in_directory ?? true,
+    });
+    setEditDialog({ open: true, user });
+  }
+
+  async function saveEdit() {
+    if (!editDialog.user) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: editDialog.user.user_id, ...editForm }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to update member");
+      toast({ variant: "success", title: "Member updated" });
+      setEditDialog({ open: false });
       await loadUsers();
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
@@ -293,6 +331,15 @@ export default function AdminMembersPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                title="Edit details"
+                onClick={() => openEdit(user)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                title="Roles"
                 onClick={() => {
                   setSelectedUser(user);
                   const sysRole = user.roles.find(r => SYSTEM_ROLES.map(s => s.value).includes(r)) || "";
@@ -595,6 +642,50 @@ export default function AdminMembersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit member details */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog({ open, user: open ? editDialog.user : undefined })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Member</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>First Name</Label>
+                <Input className="mt-1" value={editForm.first_name} onChange={(e) => setEditForm((f) => ({ ...f, first_name: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Last Name</Label>
+                <Input className="mt-1" value={editForm.last_name} onChange={(e) => setEditForm((f) => ({ ...f, last_name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Member Since</Label>
+                <Input type="date" className="mt-1" value={editForm.join_date} onChange={(e) => setEditForm((f) => ({ ...f, join_date: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Classification</Label>
+                <Input className="mt-1" value={editForm.classification} onChange={(e) => setEditForm((f) => ({ ...f, classification: e.target.value }))} placeholder="e.g. Software Engineer" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <Label className="text-charcoal">Show in public directory</Label>
+                <p className="text-xs text-pewter">Appear on the website Members page</p>
+              </div>
+              <Switch checked={editForm.show_in_directory} onCheckedChange={(v) => setEditForm((f) => ({ ...f, show_in_directory: v }))} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button className="flex-1 bg-rotary-blue hover:bg-rotary-blue/90" onClick={saveEdit} disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditDialog({ open: false })}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

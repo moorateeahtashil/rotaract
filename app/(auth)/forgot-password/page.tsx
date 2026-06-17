@@ -41,11 +41,12 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       const supabase = createClient();
+      // Use the current origin so the reset link points at the live domain,
+      // not a build-time NEXT_PUBLIC_APP_URL (which may be localhost).
+      const redirectTo = `${window.location.origin}/reset-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(
         values.email,
-        {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
-        }
+        { redirectTo }
       );
       if (error) throw error;
       setIsSent(true);
