@@ -73,6 +73,8 @@ export default function AdminMembersPage() {
   const [approveDialog, setApproveDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
   const [editDialog, setEditDialog] = useState<{ open: boolean; user?: UserRecord }>({ open: false });
   const [editForm, setEditForm] = useState({ first_name: "", last_name: "", classification: "", join_date: "", show_in_directory: true });
+  const [newPassword, setNewPassword] = useState("");
+  const [settingPw, setSettingPw] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [newSystemRole, setNewSystemRole] = useState<string>("");
   const [newOrgRole, setNewOrgRole] = useState<string>("member");
@@ -193,7 +195,32 @@ export default function AdminMembersPage() {
       join_date: user.join_date ? user.join_date.slice(0, 10) : "",
       show_in_directory: user.show_in_directory ?? true,
     });
+    setNewPassword("");
     setEditDialog({ open: true, user });
+  }
+
+  async function setUserPassword() {
+    if (!editDialog.user) return;
+    if (newPassword.length < 8) {
+      toast({ variant: "destructive", title: "Password must be at least 8 characters" });
+      return;
+    }
+    setSettingPw(true);
+    try {
+      const res = await fetch(`/api/admin/users/${editDialog.user.user_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "Failed to set password");
+      toast({ variant: "success", title: "Password set", description: "Share the new password with the member." });
+      setNewPassword("");
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setSettingPw(false);
+    }
   }
 
   async function saveEdit() {
@@ -682,6 +709,24 @@ export default function AdminMembersPage() {
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="outline" onClick={() => setEditDialog({ open: false })}>Cancel</Button>
+            </div>
+
+            {/* Reset password without email */}
+            <div className="rounded-lg border border-border p-3 mt-1">
+              <Label className="text-charcoal">Reset password (no email)</Label>
+              <p className="text-xs text-pewter mb-2">Set a new password instantly and share it with the member.</p>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  className="flex-1"
+                  placeholder="New password (min 8 chars)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <Button variant="outline" onClick={setUserPassword} disabled={settingPw || newPassword.length < 8}>
+                  {settingPw ? "Setting..." : "Set"}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Info } from "lucide-react";
@@ -90,6 +91,22 @@ export default function AdminSettingsPage() {
       toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
       setSaving(null);
+    }
+  }
+
+  // Persist a single boolean setting immediately (used by toggles).
+  async function saveBool(key: string, label: string, value: boolean, group_key = "branding") {
+    update(key, value ? "true" : "false");
+    const supabase = createClient() as any;
+    const { error } = await supabase.from("site_settings").upsert(
+      { key, value: value ? "true" : "false", value_type: "boolean", group_key, label },
+      { onConflict: "key" }
+    );
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+      update(key, value ? "false" : "true"); // revert
+    } else {
+      toast({ variant: "success", title: "Saved" });
     }
   }
 
@@ -308,6 +325,19 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 {uploadingBanner && <p className="text-xs text-pewter mt-1">Uploading...</p>}
+
+                <div className="flex items-center justify-between rounded-lg border border-border p-3 mt-4 max-w-lg">
+                  <div className="pr-4">
+                    <Label className="text-charcoal">Show club name &amp; tagline on banner</Label>
+                    <p className="text-xs text-pewter mt-0.5">
+                      When on, the homepage hero shows the club name and tagline. When off, only those two are hidden — the buttons and other content stay.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings["hero_show_title"] !== "false"}
+                    onCheckedChange={(v) => saveBool("hero_show_title", "Hero: show club name & tagline", v)}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 // ─── HERO SECTION ───
-function HeroSection({ section, tagline, clubName, heroBannerUrl }: { section: any; tagline?: string; clubName?: string; heroBannerUrl?: string }) {
+function HeroSection({ section, tagline, clubName, heroBannerUrl, showTitle = true }: { section: any; tagline?: string; clubName?: string; heroBannerUrl?: string; showTitle?: boolean }) {
   const bannerImage = heroBannerUrl || section?.image_url;
   return (
     <section className="relative min-h-screen flex items-center bg-gradient-to-br from-rotary-blue via-azure to-rotary-blue text-white overflow-hidden">
@@ -33,16 +33,20 @@ function HeroSection({ section, tagline, clubName, heroBannerUrl }: { section: a
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
         <div className="max-w-4xl">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-            <Users className="h-4 w-4" />
-            <span className="text-sm font-medium">{tagline || "Service Above Self"}</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            {clubName || "Empowering Young Leaders"}
-          </h1>
-          <p className="text-lg sm:text-xl text-white/90 mb-10 leading-relaxed max-w-2xl">
-            {tagline || section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
-          </p>
+          {showTitle && (
+            <>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">{tagline || "Service Above Self"}</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
+                {clubName || "Empowering Young Leaders"}
+              </h1>
+              <p className="text-lg sm:text-xl text-white/90 mb-10 leading-relaxed max-w-2xl">
+                {tagline || section?.body || "Join a global network of 1.4 million members creating lasting change through community service, fellowship, and professional development."}
+              </p>
+            </>
+          )}
           <div className="flex flex-col sm:flex-row gap-4">
             {section?.cta_label && (
               <Button asChild size="lg" className="bg-rotary-gold text-black hover:bg-rotary-gold/90 font-semibold px-8 h-12">
@@ -576,14 +580,16 @@ export default async function HomePage() {
   const settings = await getSiteSettings();
   const getS = (key: string) => (settings as any[]).find((s: any) => s.key === key)?.value || "";
   const clubName = getS("club_name") || "Rotaract Club";
-  const tagline = getS("club_tagline");
+  const tagline = getS("site_tagline") || getS("club_tagline");
   const heroBannerUrl = getS("hero_banner_url");
+  // Show the club name + tagline overlay unless explicitly turned off.
+  const heroShowTitle = getS("hero_show_title") !== "false";
 
   // If no sections exist in DB, show default layout
   if (sections.length === 0) {
     return (
       <>
-        <HeroSection section={null} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} />
+        <HeroSection section={null} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} showTitle={heroShowTitle} />
         <MeetingInfoSection section={null} />
         <WhatIsRotarySection />
         <UpcomingEventsSection section={null} />
@@ -603,7 +609,7 @@ export default async function HomePage() {
       {sections.map((section: any) => {
         switch (section.section_type) {
           case 'hero':
-            return <HeroSection key={section.id} section={section} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} />;
+            return <HeroSection key={section.id} section={section} tagline={tagline} clubName={clubName} heroBannerUrl={heroBannerUrl} showTitle={heroShowTitle} />;
           case 'meeting_info':
             return <MeetingInfoSection key={section.id} section={section} />;
           case 'stats':
