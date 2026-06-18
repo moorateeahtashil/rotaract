@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/db/browser-client";
+import { compressImage } from "@/lib/utils/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,8 +97,9 @@ export default function AdminNewsPage() {
     setImagePreview(URL.createObjectURL(file));
   }
 
-  async function uploadImage(file: File): Promise<string> {
-    const ext = file.name.split(".").pop() || "jpg";
+  async function uploadImage(original: File): Promise<string> {
+    const file = await compressImage(original);
+    const ext = file.name.split(".").pop() || "webp";
     const path = `post-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("posts").upload(path, file, {
       cacheControl: "3600",

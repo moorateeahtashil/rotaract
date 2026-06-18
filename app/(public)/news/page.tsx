@@ -78,6 +78,8 @@ async function NewsContent({ searchParams }: { searchParams: { category?: string
             <div className="bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center min-h-48 md:min-h-full">
               {featuredPost.featured_image ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={featuredPost.featured_image}
                   alt={featuredPost.title}
                   className="w-full aspect-video md:h-full md:aspect-auto object-contain"
@@ -130,6 +132,8 @@ async function NewsContent({ searchParams }: { searchParams: { category?: string
             <div className="bg-gradient-to-br from-rotary-blue/10 to-azure/10 relative">
               {post.featured_image ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={post.featured_image}
                   alt={post.title}
                   className="w-full aspect-video object-contain"

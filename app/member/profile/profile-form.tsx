@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, FolderKanban, Calendar, Save, Upload } from "lucide-react";
 import { createClient } from "@/lib/db/browser-client";
+import { compressImage } from "@/lib/utils/image";
 
 const ROLE_DISPLAY: Record<string, { label: string; color: string }> = {
   super_admin:        { label: "Super Admin",        color: "bg-red-100 text-red-700 border-red-200" },
@@ -105,12 +106,13 @@ export function ProfileForm({
   });
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const original = e.target.files?.[0];
+    if (!original) return;
     setUploading(true);
     const supabase = createClient() as any;
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const file = await compressImage(original, { maxWidth: 512, maxHeight: 512, quality: 0.85 });
+      const ext = file.name.split(".").pop() || "webp";
       const path = `avatars/${profile?.user_id}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("public")

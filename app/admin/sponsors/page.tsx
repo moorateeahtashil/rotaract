@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/db/browser-client";
+import { compressImage } from "@/lib/utils/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,8 +109,10 @@ export default function AdminSponsorsPage() {
     setLogoPreview(URL.createObjectURL(file));
   }
 
-  async function uploadLogo(file: File): Promise<string> {
-    const ext = file.name.split(".").pop() || "png";
+  async function uploadLogo(original: File): Promise<string> {
+    // Compress (skips SVG automatically); keep logos crisp with a smaller cap.
+    const file = await compressImage(original, { maxWidth: 600, maxHeight: 600, quality: 0.9 });
+    const ext = file.name.split(".").pop() || "webp";
     const path = `sponsor-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("logos").upload(path, file, { upsert: true });
     if (error) throw error;

@@ -40,6 +40,8 @@ export default async function GalleryPage() {
                     <div className="h-48 bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center relative">
                       {album.cover_image_url ? (
                         <img
+                          loading="lazy"
+                          decoding="async"
                           src={album.cover_image_url}
                           alt={album.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

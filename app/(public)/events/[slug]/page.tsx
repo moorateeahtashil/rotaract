@@ -46,6 +46,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <section className="relative h-[50vh] min-h-[350px] bg-charcoal overflow-hidden">
         {event.image_url ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={event.image_url}
             alt={event.title}
             className="absolute inset-0 w-full h-full object-cover"

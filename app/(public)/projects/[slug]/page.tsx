@@ -37,6 +37,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <section className="relative h-[60vh] min-h-[400px] bg-charcoal overflow-hidden">
         {project.images?.find((img: any) => img.is_primary)?.image_url ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={project.images.find((img: any) => img.is_primary)?.image_url}
             alt={project.title}
             className="absolute inset-0 w-full h-full object-cover"

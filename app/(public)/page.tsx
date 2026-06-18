@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { getHomepageSections, getFeaturedProjects, getUpcomingEvents, getBoardMembers, getPosts, getSponsorClub, getSiteSettings, getRotaryHighlights } from "@/lib/db/queries";
 import { ArrowRight, Users, Calendar, Heart, MapPin, Clock, Rss, Globe, FolderKanban, Sparkles } from "lucide-react";
@@ -27,7 +28,7 @@ function HeroSection({ section, tagline, clubName, heroBannerUrl, showTitle = tr
       </div>
 
       {bannerImage && (
-        <img src={bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <Image src={bannerImage} alt="" fill priority sizes="100vw" className="object-cover" />
       )}
       <div className="absolute inset-0 bg-rotary-blue/40" />
 
@@ -97,13 +98,14 @@ async function UpcomingEventsSection({ section }: { section: any }) {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event: any) => (
             <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-200 border-border/50 group">
-              <div className="h-44 bg-gradient-to-br from-rotary-blue/20 via-azure/15 to-rotary-blue/20 flex items-center justify-center relative">
+              <div className="h-44 bg-gradient-to-br from-rotary-blue/20 via-azure/15 to-rotary-blue/20 flex items-center justify-center relative overflow-hidden">
                 {event.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={event.image_url}
                     alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
                   <Calendar className="h-14 w-14 text-rotary-blue/30" />
@@ -390,6 +392,8 @@ async function WhatIsRotarySection() {
                   {h.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={h.image_url}
                       alt={h.title}
                       className="w-full aspect-video object-contain bg-white/5"

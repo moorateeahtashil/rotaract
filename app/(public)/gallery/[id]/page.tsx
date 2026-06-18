@@ -73,9 +73,10 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={m.media_url}
                     alt={album.title}
-                    loading="lazy"
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </a>

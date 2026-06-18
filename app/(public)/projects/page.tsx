@@ -78,6 +78,8 @@ async function ProjectsGrid({ searchParams }: { searchParams: Promise<{ status?:
             <div className="h-48 bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center relative overflow-hidden">
               {project.images?.find((img: any) => img.is_primary)?.image_url ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={project.images.find((img: any) => img.is_primary)?.image_url}
                   alt={project.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

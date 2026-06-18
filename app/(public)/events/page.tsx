@@ -66,6 +66,8 @@ async function EventsContent({ searchParams }: { searchParams: Promise<{ tab?: s
             <div className="h-40 bg-gradient-to-br from-rotary-blue/10 to-azure/10 flex items-center justify-center relative">
               {event.image_url ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={event.image_url}
                   alt={event.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

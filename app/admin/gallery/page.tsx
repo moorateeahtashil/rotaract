@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/db/browser-client";
+import { compressImage } from "@/lib/utils/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,8 +159,9 @@ export default function AdminGalleryPage() {
     if (!files.length) return;
     setUploadingMedia(true);
     try {
-      for (const file of files) {
-        const ext = file.name.split(".").pop() || "jpg";
+      for (const original of files) {
+        const file = await compressImage(original);
+        const ext = file.name.split(".").pop() || "webp";
         const path = `${selectedAlbum.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: upErr } = await supabase.storage.from("gallery").upload(path, file, { upsert: false });
         if (upErr) throw upErr;

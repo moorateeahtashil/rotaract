@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Calendar, MapPin, ExternalLink, X, QrCode, Copy } from "lucide-react";
+import { compressImage } from "@/lib/utils/image";
 
 type Event = {
   id: string;
@@ -263,8 +264,9 @@ export default function AdminEventsPage() {
     setImagePreview(URL.createObjectURL(file));
   }
 
-  async function uploadImage(file: File): Promise<string> {
-    const ext = file.name.split(".").pop() || "jpg";
+  async function uploadImage(original: File): Promise<string> {
+    const file = await compressImage(original);
+    const ext = file.name.split(".").pop() || "webp";
     const path = `event-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("events").upload(path, file, {
       cacheControl: "3600",

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { compressImage } from "@/lib/utils/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Info } from "lucide-react";
@@ -111,11 +112,12 @@ export default function AdminSettingsPage() {
   }
 
   async function onUploadHeroBanner(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const original = e.target.files?.[0];
+    if (!original) return;
     setUploadingBanner(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const file = await compressImage(original, { maxWidth: 1920, maxHeight: 1920, quality: 0.82 });
+      const ext = file.name.split(".").pop() || "webp";
       const path = `hero-banner-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("banners").upload(path, file, {
         cacheControl: "3600",
