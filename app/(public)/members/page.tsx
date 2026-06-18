@@ -5,7 +5,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, Briefcase } from "lucide-react";
-import { getInitials } from "@/lib/utils";
+
+const FAVICON_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/logos/favicon.png`
+  : "";
 
 export const metadata = {
   title: "Our Members",
@@ -56,17 +59,31 @@ async function MembersGrid({ searchParams }: { searchParams: Promise<{ q?: strin
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map((member: any) => {
           const profile = member.profile;
-          const name = profile ? `${profile.first_name} ${profile.last_name}` : "Unknown Member";
+          const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+          const name = fullName || "Member";
           return (
             <Card key={member.id} className="hover:shadow-md transition-shadow">
               <CardContent className="pt-6 text-center">
-                <Avatar className="h-16 w-16 mx-auto mb-3">
-                  <AvatarImage src={profile?.avatar_url || ""} alt={name} />
-                  <AvatarFallback className="bg-rotary-blue/10 text-rotary-blue font-semibold">
-                    {profile ? getInitials(profile.first_name, profile.last_name) : "?"}
-                  </AvatarFallback>
-                </Avatar>
+                {profile?.avatar_url ? (
+                  <Avatar className="h-16 w-16 mx-auto mb-3">
+                    <AvatarImage src={profile.avatar_url} alt={name} />
+                    <AvatarFallback className="bg-white p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={FAVICON_URL} alt="" className="h-full w-full object-contain" />
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="h-16 w-16 mx-auto mb-3 rounded-full bg-rotary-blue/5 border border-border flex items-center justify-center overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={FAVICON_URL} alt="" className="h-10 w-10 object-contain" />
+                  </div>
+                )}
                 <h3 className="font-semibold text-charcoal">{name}</h3>
+                {member.board_position && (
+                  <Badge className="bg-rotary-gold/15 text-rotary-gold border-rotary-gold/30 text-xs mt-1">
+                    {member.board_position}
+                  </Badge>
+                )}
                 {member.classification && (
                   <p className="text-xs text-pewter mt-1">{member.classification}</p>
                 )}

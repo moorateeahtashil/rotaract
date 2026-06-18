@@ -322,15 +322,10 @@ export async function getMembers({
   limit?: number;
   offset?: number;
 } = {}) {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   let query = supabase
     .from("members")
-    .select(
-      `
-      *,
-      profile:profiles(first_name, last_name, email, avatar_url, bio, occupation, company)
-    `,
-    )
+    .select("*")
     .eq("show_in_directory", showInDirectory)
     .eq("status", status)
     .is("deleted_at", null)
@@ -338,8 +333,42 @@ export async function getMembers({
 
   if (limit) query = query.range(offset, offset + limit - 1);
 
-  const { data } = await query;
-  return (data ?? []) as any[];
+  const { data: members } = await query;
+  const rows = (members ?? []) as any[];
+  if (rows.length === 0) return rows;
+
+  // Join profiles + board positions manually (the PostgREST embed for
+  // members→profiles doesn't resolve because members.user_id → auth.users).
+  const userIds = rows.map((m) => m.user_id).filter(Boolean);
+  const memberIds = rows.map((m) => m.id);
+
+  const [{ data: profiles }, { data: board }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("user_id, first_name, last_name, email, avatar_url, bio, occupation, company")
+      .in("user_id", userIds),
+    supabase
+      .from("board_members")
+      .select("member_id, custom_title, sort_order, position:board_positions(title, sort_order)")
+      .in("member_id", memberIds)
+      .eq("is_visible", true)
+      .is("deleted_at", null),
+  ]);
+
+  const profileByUser = new Map<string, any>();
+  for (const p of profiles || []) profileByUser.set(p.user_id, p);
+
+  const positionByMember = new Map<string, string>();
+  for (const b of board || []) {
+    const title = b.custom_title || (b as any).position?.title;
+    if (title && !positionByMember.has(b.member_id)) positionByMember.set(b.member_id, title);
+  }
+
+  return rows.map((m) => ({
+    ...m,
+    profile: profileByUser.get(m.user_id) || null,
+    board_position: positionByMember.get(m.id) || null,
+  }));
 }
 
 export async function getMemberCount() {
