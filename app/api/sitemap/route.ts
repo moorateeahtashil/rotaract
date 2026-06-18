@@ -3,11 +3,12 @@
 // ============================================================
 
 import { getProjects, getEvents, getPosts, getAvenues } from "@/lib/db/queries";
+import { getBaseUrl } from "@/lib/utils";
 
 export const revalidate = 3600; // Revalidate every hour
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   // Static pages
   const staticPages = [

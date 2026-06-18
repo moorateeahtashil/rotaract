@@ -221,7 +221,7 @@ export function ProfileForm({
               <Avatar className="h-20 w-20">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="text-xl bg-rotary-blue text-white">
-                  {profile ? `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase() : "?"}
+                  {`${profile?.first_name?.[0] ?? ""}${profile?.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
               <label className="absolute -bottom-1 -right-1 cursor-pointer">

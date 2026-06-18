@@ -14,7 +14,7 @@
   --color-turquoise: #00adbb;
   --color-white: #ffffff;
   --color-charcoal: #54565a;
-  --color-pewter: #898a8d;
+  --color-pewter: #5f6166; /* darkened for WCAG AA contrast (~4.7:1 on white) */
   --color-smoke: #b1b1b1;
   --color-silver: #d0cfcd;
   --color-stone: #9ba4b0;
@@ -33,7 +33,7 @@
   --color-secondary: #f7a81b;
   --color-secondary-foreground: #000000;
   --color-muted: #d6d1ca;
-  --color-muted-foreground: #898a8d;
+  --color-muted-foreground: #5f6166;
   --color-accent: #00a2e0;
   --color-accent-foreground: #ffffff;
   --color-destructive: #d41367;

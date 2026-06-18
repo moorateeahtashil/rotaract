@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           join_date: new Date().toISOString().split("T")[0],
           status: "active",
+          show_in_directory: false, // auto-provisioned for attendance; not a public listing
         })
         .select("id")
         .single();

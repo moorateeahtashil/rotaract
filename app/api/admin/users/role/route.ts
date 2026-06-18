@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceRoleClient } from "@/lib/db/server";
 import { cookies } from "next/headers";
+import { ROLE_HIERARCHY, highestRoleLevel } from "@/lib/auth/roles";
 
 const ADMIN_ROLES = [
   "super_admin", "admin", "normal", "president", "secretary",
@@ -31,10 +32,12 @@ export async function POST(req: NextRequest) {
       .eq("user_id", user.id)
       .eq("is_active", true);
 
-    const isAdmin = (adminRoles || []).some((r: any) => ["super_admin", "admin"].includes(r.role));
+    const callerRoleNames = (adminRoles || []).map((r: any) => r.role);
+    const isAdmin = callerRoleNames.some((r: string) => ["super_admin", "admin"].includes(r));
     if (!isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
+    const isSuperAdmin = callerRoleNames.includes("super_admin");
 
     const { userId, role, deactivateRoles, ensureMemberRecord } = await req.json();
 
@@ -44,6 +47,28 @@ export async function POST(req: NextRequest) {
 
     if (!ADMIN_ROLES.includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    // ── Prevent privilege escalation ──
+    // 1) Cannot assign a role more privileged than the caller's own highest.
+    const callerLevel = highestRoleLevel(callerRoleNames);
+    const targetLevel = ROLE_HIERARCHY[role] ?? ROLE_HIERARCHY.public;
+    if (targetLevel < callerLevel) {
+      return NextResponse.json({ error: "You cannot assign a role higher than your own." }, { status: 403 });
+    }
+    // 2) Only a super admin may grant or revoke super_admin.
+    const touchesSuper = role === "super_admin" || (Array.isArray(deactivateRoles) && deactivateRoles.includes("super_admin"));
+    if (touchesSuper && !isSuperAdmin) {
+      return NextResponse.json({ error: "Only a Super Admin can manage the Super Admin role." }, { status: 403 });
+    }
+    // 3) Never remove the last active super admin (avoids locking everyone out).
+    if (Array.isArray(deactivateRoles) && deactivateRoles.includes("super_admin")) {
+      const { count } = await service
+        .from("user_roles").select("*", { count: "exact", head: true })
+        .eq("role", "super_admin").eq("is_active", true);
+      if ((count ?? 0) <= 1) {
+        return NextResponse.json({ error: "You cannot remove the last Super Admin." }, { status: 403 });
+      }
     }
 
     // Deactivate old conflicting roles first (e.g. old system role before assigning new one)

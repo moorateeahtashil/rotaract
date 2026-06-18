@@ -50,6 +50,7 @@ async function ensureRoster(service: any) {
       user_id: uid,
       join_date: new Date().toISOString().split("T")[0],
       status: prospectiveOnly ? "pending" : "active",
+      show_in_directory: false, // auto-provisioned for attendance tracking
     }).select("id").single();
     if (created) memberByUser.set(uid, created.id);
   }

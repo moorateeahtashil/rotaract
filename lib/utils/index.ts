@@ -108,6 +108,16 @@ export function generateId(): string {
   return crypto.randomUUID();
 }
 
+// Resolve the public base URL. Prefer an explicit non-localhost
+// NEXT_PUBLIC_APP_URL; otherwise fall back to Vercel's deployment URL so
+// metadata/sitemap/robots/links never point at localhost in production.
+export function getBaseUrl(): string {
+  const env = process.env.NEXT_PUBLIC_APP_URL;
+  if (env && !env.includes("localhost")) return env.replace(/\/$/, "");
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return env || "http://localhost:3000";
+}
+
 export function absoluteUrl(path: string): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}${path}`;
+  return `${getBaseUrl()}${path}`;
 }

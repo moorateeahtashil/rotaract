@@ -27,9 +27,7 @@ export async function POST(request: Request) {
         `
         *,
         registrations:event_registrations(
-          member:members(
-            profile:profiles(first_name, last_name, email)
-          )
+          member:members(id, user_id)
         )
       `
       )
@@ -38,12 +36,23 @@ export async function POST(request: Request) {
       .in("status", ["published", "ongoing"])
       .is("deleted_at", null);
 
+    // Resolve profiles manually (members→profiles embed doesn't resolve).
+    const regUserIds = (upcomingEvents || [])
+      .flatMap((e: any) => (e.registrations || []).map((r: any) => r.member?.user_id))
+      .filter(Boolean);
+    const profileByUser = new Map<string, any>();
+    if (regUserIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles").select("user_id, first_name, last_name, email").in("user_id", regUserIds);
+      for (const p of profs || []) profileByUser.set(p.user_id, p);
+    }
+
     if (upcomingEvents) {
       for (const event of upcomingEvents) {
         if (!event.registrations) continue;
 
         for (const reg of event.registrations) {
-          const profile = reg.member?.profile;
+          const profile = profileByUser.get(reg.member?.user_id);
           if (!profile?.email) continue;
 
           // Check if reminder already sent

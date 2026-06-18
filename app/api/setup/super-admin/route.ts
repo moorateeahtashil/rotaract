@@ -10,15 +10,18 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient() as any;
 
-    // Optional hard gate: if SETUP_SECRET is configured, require it. This
-    // prevents a "land-grab" on a fresh deploy before the first super_admin
-    // exists. The no-super_admin-yet self-gate below still applies regardless.
+    // Hard gate: SETUP_SECRET is MANDATORY. Without it the route refuses to run,
+    // so it can never be used to "land-grab" super_admin on a fresh deploy.
     const setupSecret = process.env.SETUP_SECRET;
-    if (setupSecret) {
-      const provided = req.headers.get("x-setup-secret");
-      if (provided !== setupSecret) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    if (!setupSecret) {
+      return NextResponse.json(
+        { error: "Setup is disabled. Set the SETUP_SECRET environment variable to use this endpoint." },
+        { status: 403 }
+      );
+    }
+    const provided = req.headers.get("x-setup-secret");
+    if (provided !== setupSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { email } = await req.json();

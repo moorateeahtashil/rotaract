@@ -141,10 +141,10 @@ async function UpcomingEventsSection({ section }: { section: any }) {
 // Hardcoded Five Avenues of Service
 const HARDCODED_AVENUES = [
   { slug: "club-service", name: "Club Service", description: "Strengthen the club through member development, fellowship, and leadership.", icon: "🤝" },
+  { slug: "vocational-service", name: "Vocational Service", description: "Grow careers, ethics, and apply professional skills and expertise in service.", icon: "💼" },
   { slug: "community-service", name: "Community Service", description: "Address local needs through hands-on projects in education, health, and environment.", icon: "❤️" },
   { slug: "international-service", name: "International Service", description: "Foster international understanding, peace, and goodwill across borders.", icon: "🌍" },
-  { slug: "professional-development", name: "Professional Development", description: "Grow careers, leadership skills, and apply professional expertise in service.", icon: "💼" },
-  { slug: "service-to-clubs", name: "Service to Clubs", description: "Strengthen relationships with Rotary clubs and the broader Rotaract network.", icon: "🌐" },
+  { slug: "new-generations-service", name: "New Generations Service", description: "Empower young people through leadership, mentorship, and development programs.", icon: "🌱" },
 ];
 
 // ─── AVENUES ───

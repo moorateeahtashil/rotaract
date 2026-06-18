@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import { Providers } from "@/providers";
 import { Toaster } from "@/components/ui/toaster";
+import { getBaseUrl } from "@/lib/utils";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
   },
   description:
     "Rotaract Club platform — connecting young leaders through service, fellowship, and professional development.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(getBaseUrl()),
   icons: {
     icon: faviconUrl,
     shortcut: faviconUrl,

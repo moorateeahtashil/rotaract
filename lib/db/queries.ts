@@ -151,7 +151,7 @@ export async function getProjects({
 }
 
 export async function getProjectBySlug(slug: string) {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const { data } = await supabase
     .from("projects")
     .select(
@@ -161,7 +161,7 @@ export async function getProjectBySlug(slug: string) {
       committee:committees(name, slug),
       images:project_images(image_url, caption, is_primary, sort_order),
       team:project_team(
-        member:members(id, profile:profiles(first_name, last_name, avatar_url)),
+        member:members(id, user_id),
         role_in_project
       )
     `,
@@ -169,8 +169,20 @@ export async function getProjectBySlug(slug: string) {
     .eq("slug", slug)
     .eq("is_published", true)
     .is("deleted_at", null)
-    .single();
-  return data as any;
+    .maybeSingle();
+
+  const project = data as any;
+  if (project?.team?.length) {
+    const userIds = project.team.map((t: any) => t.member?.user_id).filter(Boolean);
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles").select("user_id, first_name, last_name, avatar_url").in("user_id", userIds);
+      const byUser = new Map<string, any>();
+      for (const p of profiles || []) byUser.set(p.user_id, p);
+      for (const t of project.team) if (t.member) t.member.profile = byUser.get(t.member.user_id) || null;
+    }
+  }
+  return project;
 }
 
 export async function getFeaturedProjects(limit = 3) {
@@ -270,18 +282,14 @@ export async function getEventCount() {
 export async function getBoardMembers({
   current = true,
 }: { current?: boolean } = {}) {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   let query = supabase
     .from("board_members")
     .select(
       `
       *,
       position:board_positions(*),
-      member:members(
-        id,
-        user_id,
-        profile:profiles(first_name, last_name, email, avatar_url, bio, occupation, company)
-      )
+      member:members(id, user_id)
     `,
     )
     .eq("is_visible", true)
@@ -294,7 +302,22 @@ export async function getBoardMembers({
   }
 
   const { data } = await query;
-  return (data ?? []) as any[];
+  const rows = (data ?? []) as any[];
+
+  // Attach profiles manually (members→profiles embed doesn't resolve).
+  const userIds = rows.map((b) => b.member?.user_id).filter(Boolean);
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, first_name, last_name, email, avatar_url, bio, occupation, company")
+      .in("user_id", userIds);
+    const byUser = new Map<string, any>();
+    for (const p of profiles || []) byUser.set(p.user_id, p);
+    for (const b of rows) {
+      if (b.member) b.member.profile = byUser.get(b.member.user_id) || null;
+    }
+  }
+  return rows;
 }
 
 export async function getBoardPositions() {
@@ -517,20 +540,30 @@ export async function getSponsorClub() {
 // ============================================================
 
 export async function getCommittees() {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   const { data } = await supabase
     .from("committees")
     .select(
       `
       *,
-      chair:members(profile:profiles(first_name, last_name)),
+      chair:members(id, user_id),
       avenue:avenues(name, slug)
     `,
     )
     .eq("is_active", true)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
-  return (data ?? []) as any[];
+  const rows = (data ?? []) as any[];
+
+  const userIds = rows.map((c) => c.chair?.user_id).filter(Boolean);
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles").select("user_id, first_name, last_name").in("user_id", userIds);
+    const byUser = new Map<string, any>();
+    for (const p of profiles || []) byUser.set(p.user_id, p);
+    for (const c of rows) if (c.chair) c.chair.profile = byUser.get(c.chair.user_id) || null;
+  }
+  return rows;
 }
 
 // ============================================================
