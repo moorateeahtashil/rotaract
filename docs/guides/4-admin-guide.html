@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><title>Admin Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color:#1f2733; font-size:11.5px; line-height:1.55; margin:0; }
+  h1,h2,h3,h4{ color:#17458f; line-height:1.25; }
+  h1{ font-size:30px; margin:0 0 6px; }
+  h2{ font-size:19px; margin:24px 0 8px; padding-bottom:5px; border-bottom:2px solid #f7a81b; page-break-after:avoid; }
+  h3{ font-size:14px; margin:14px 0 4px; color:#0067c8; page-break-after:avoid; }
+  h4{ font-size:12px; margin:10px 0 3px; color:#1f2733; }
+  p{ margin:5px 0; } ul,ol{ margin:5px 0 8px; padding-left:20px; } li{ margin:2px 0; }
+  code{ background:#eef2fb; color:#17458f; padding:1px 5px; border-radius:4px; font-size:10.5px; }
+  .cover{ text-align:center; padding:90px 0 40px; page-break-after:always; }
+  .badge{ display:inline-block; width:74px; height:74px; line-height:74px; border-radius:50%; background:#17458f; color:#fff; font-size:34px; font-weight:700; margin-bottom:18px; }
+  .sub{ color:#54565a; font-size:15px; margin-top:8px; } .muted{ color:#6b7280; }
+  .tag{ display:inline-block; margin-top:18px; padding:5px 14px; border:1px solid #f7a81b; border-radius:20px; color:#a87410; font-size:11px; letter-spacing:1px; text-transform:uppercase; }
+  .note{ background:#f0f4fb; border-left:3px solid #17458f; padding:8px 12px; border-radius:0 6px 6px 0; margin:8px 0; }
+  .warn{ background:#fff7e6; border-left:3px solid #f7a81b; padding:8px 12px; border-radius:0 6px 6px 0; margin:8px 0; }
+  table{ width:100%; border-collapse:collapse; margin:8px 0; font-size:10px; }
+  th,td{ border:1px solid #d9e0ec; padding:5px 7px; text-align:left; vertical-align:top; }
+  th{ background:#17458f; color:#fff; } tr:nth-child(even) td{ background:#f6f8fc; } td.c{ text-align:center; }
+  .toc a{ color:#17458f; text-decoration:none; } .toc li{ margin:3px 0; }
+  .step{ display:flex; gap:10px; margin:6px 0; } .num{ flex:0 0 22px; height:22px; border-radius:50%; background:#17458f; color:#fff; font-weight:700; font-size:11px; text-align:center; line-height:22px; }
+  .section{ page-break-before:always; }
+  footer{ margin-top:24px; border-top:1px solid #d9e0ec; padding-top:8px; color:#9aa3b2; font-size:10px; text-align:center; }
+</style></head><body>
+
+<div class="cover">
+  <div class="badge">R</div>
+  <h1>Rotaract Club</h1>
+  <div class="sub">Administrator Guide</div>
+  <div class="sub muted">Managing the platform end-to-end</div>
+  <div class="tag">Service Above Self</div>
+  <p class="muted" style="margin-top:36px;font-size:10px;">Everything an admin needs: people, events &amp; attendance, content, the membership pathway, and roles.</p>
+</div>
+
+<h2>Contents</h2>
+<ol class="toc">
+  <li><a>Getting into the Admin Portal</a></li>
+  <li><a>Roles &amp; who can do what</a></li>
+  <li><a>People: Members, Applications, Board, Committees</a></li>
+  <li><a>Attendance &amp; membership requirements</a></li>
+  <li><a>Program: Events, Event Types, Projects, News, Announcements</a></li>
+  <li><a>Media: Gallery, Resources, FAQs, Sponsors</a></li>
+  <li><a>Content &amp; Site Settings</a></li>
+  <li><a>Insights &amp; System (Analytics, Users, Audit Log)</a></li>
+  <li><a>Common workflows (step-by-step)</a></li>
+  <li><a>On your phone</a></li>
+</ol>
+
+<!-- 1 -->
+<h2>1. Getting into the Admin Portal</h2>
+<p>Log in at <strong>Sign In</strong>. If your account has an Admin or Super Admin role you'll land on the <strong>Admin Portal</strong> (<code>/admin</code>). Everything is reached from the left sidebar, grouped into Overview, Content, People, Program, Media &amp; Resources, Insights, and System.</p>
+<div class="note">Most sections work the same way: a list of items with <strong>Add</strong>, an <strong>Edit</strong> (pencil), and <strong>Delete</strong> (trash) action, and a pop-up form for the details.</div>
+
+<!-- 2 -->
+<h2>2. Roles &amp; who can do what</h2>
+<table>
+  <tr><th>Role</th><th>Can do</th></tr>
+  <tr><td><strong>Super Admin</strong></td><td>Everything, including managing other admins, deleting users, and creating Super Admins.</td></tr>
+  <tr><td><strong>Admin</strong></td><td>The full Admin Portal. Can assign roles up to (not above) their own level.</td></tr>
+  <tr><td><strong>Board Member</strong></td><td>Member portal + elevated rights on certain content; no admin sidebar.</td></tr>
+  <tr><td><strong>Member</strong></td><td>Full member portal; listed in the directory.</td></tr>
+  <tr><td><strong>Prospective Member</strong></td><td>Member portal (incl. attendance) while earning membership; sees progress; not in directory.</td></tr>
+</table>
+<div class="warn">An admin can never grant a role more powerful than their own. Only a Super Admin can create another Super Admin.</div>
+
+<!-- 3 -->
+<div class="section">
+<h2>3. People</h2>
+<h3>Members</h3>
+<p>The central roster of everyone on the platform.</p>
+<ul>
+  <li><strong>Add</strong> — invite a new person by email (choose their role); they receive an invitation link.</li>
+  <li><strong>Approve</strong> — promote a pending applicant/prospect to full Member.</li>
+  <li><strong>Edit roles</strong> — change a person's system role (Admin) and org role (Member / Board / Prospective).</li>
+  <li><strong>Delete</strong> — remove a user.</li>
+</ul>
+<h3>Applications</h3>
+<p>Submissions from the public <strong>Join</strong> form. Review the details, then <strong>Approve</strong> (which invites and onboards them as a Member and emails them) or <strong>Reject</strong> with optional notes.</p>
+<h3>Board Members &amp; Committees</h3>
+<p>Manage the board roster with positions, and committees with a chair chosen from board members.</p>
+</div>
+
+<!-- 4 -->
+<div class="section">
+<h2>4. Attendance &amp; Membership Requirements</h2>
+<p><strong>People → Attendance</strong> is where you record participation and track who's ready to become a member.</p>
+<h3>Mark Attendance</h3>
+<div class="step"><div class="num">1</div><div>Open the <strong>Mark Attendance</strong> tab and choose an event.</div></div>
+<div class="step"><div class="num">2</div><div>Tick everyone who attended (members and prospects). Changes save instantly.</div></div>
+<p>This is in addition to members self-checking-in by QR — use it to correct or add attendance (e.g. for someone who couldn't scan, or after an event has ended).</p>
+<h3>By Person</h3>
+<p>See each person's attendance. Prospective members show their <strong>requirement progress</strong>; when complete they get a green <strong>Ready</strong> badge and a one-click <strong>Promote</strong> button.</p>
+<h3>Requirements</h3>
+<p>Click <strong>Requirements</strong> to set how many of each event type a prospect must attend (e.g. 4 Club Meetings, 2 Fellowships, 2 Projects) plus optional project-lead roles. Set 0 to ignore a type. These thresholds are fully editable.</p>
+</div>
+
+<!-- 5 -->
+<div class="section">
+<h2>5. Program</h2>
+<h3>Events</h3>
+<p>Create events with an image, date/time, location, capacity, status, and an <strong>event type</strong>. Each event has a <strong>QR button</strong> that generates its attendance code (see workflow §9).</p>
+<h3>Event Types</h3>
+<p>The categories used for events and attendance requirements. Six <strong>core types are locked</strong> and cannot be deleted: Project, Fellowship, Professional Development, Club Meeting, Club Assembly, Board Meeting. You can add your own additional types.</p>
+<h3>Projects</h3>
+<p>Service projects. Creating a project also creates a linked <strong>Project</strong>-type event automatically, so the project is attendable and counts toward membership requirements.</p>
+<h3>News &amp; Announcements</h3>
+<p><strong>News</strong> — public blog posts with a featured image and publish toggle. <strong>Announcements</strong> — messages shown in the member portal, with a priority, optional expiry, and publish toggle.</p>
+</div>
+
+<!-- 6 -->
+<div class="section">
+<h2>6. Media &amp; Resources</h2>
+<h3>Gallery</h3><p>Create albums and upload multiple images to each.</p>
+<h3>Resources</h3><p>Upload documents and set an access level: public, member-only, or board-only.</p>
+<h3>FAQs</h3><p>Add Q&amp;A entries with a category, sort order, and visibility toggle — visible FAQs appear on the public FAQ page, grouped by category.</p>
+<h3>Sponsors</h3><p>Manage the sponsoring Rotary club(s) shown on the public Sponsors page — name, district, logo, description, president, website, socials.</p>
+
+<h2>7. Content &amp; Site Settings</h2>
+<h3>Site Settings</h3><p>Club name, tagline, hero banner image, logo, next-meeting info, social links, footer, and contact details.</p>
+<h3>Rotary Highlights</h3><p>The cards in the "What is Rotary?" section on the homepage.</p>
+<h3>Legal Pages</h3><p>Edit the Terms and Privacy pages.</p>
+</div>
+
+<!-- 8 -->
+<div class="section">
+<h2>8. Insights &amp; System</h2>
+<h3>Analytics</h3><p>A live snapshot of people, program, and content counts, plus recent sign-ups.</p>
+<h3>Users &amp; Roles</h3><p>Search any user and change their primary role. Assigning a member/board role also creates their member record; choosing "No role" removes portal access.</p>
+<h3>Audit Log</h3><p>A chronological record of administrative activity — who did what, and when.</p>
+</div>
+
+<!-- 9 -->
+<div class="section">
+<h2>9. Common Workflows</h2>
+<h3>Onboard a new member</h3>
+<div class="step"><div class="num">1</div><div><strong>Members → Add</strong> (or approve from <strong>Applications</strong>).</div></div>
+<div class="step"><div class="num">2</div><div>Enter name, email, role → they get an invite email.</div></div>
+
+<h3>Run attendance for an event</h3>
+<div class="step"><div class="num">1</div><div><strong>Events</strong> → click the event's <strong>QR button</strong> to generate its code.</div></div>
+<div class="step"><div class="num">2</div><div>Display the QR (or the text code) at the venue — members scan it to check in.</div></div>
+<div class="step"><div class="num">3</div><div>Afterwards, fix any gaps in <strong>Attendance → Mark Attendance</strong>.</div></div>
+<div class="note">Codes expire after 24 hours, and only one is active per event — generate a fresh one each time.</div>
+
+<h3>Promote a prospect to member</h3>
+<div class="step"><div class="num">1</div><div>Set the thresholds once in <strong>Attendance → Requirements</strong>.</div></div>
+<div class="step"><div class="num">2</div><div>Record attendance as prospects participate.</div></div>
+<div class="step"><div class="num">3</div><div>When a prospect shows <strong>Ready</strong> (green), click <strong>Promote</strong>.</div></div>
+
+<h2>10. On your phone</h2>
+<p>The Admin Portal is mobile-friendly. Tap the <strong>menu (☰)</strong> icon in the top bar to open the admin navigation drawer; tap any section to go there. All forms, lists, and the attendance tools adapt to small screens.</p>
+
+<footer>Rotaract Club — Administrator Guide · Service Above Self</footer>
+</body></html>
