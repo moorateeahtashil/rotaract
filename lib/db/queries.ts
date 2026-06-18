@@ -122,7 +122,7 @@ export async function getProjects({
   limit?: number;
   offset?: number;
 } = {}) {
-  const supabase = await createServerClient();
+  const supabase = await createServerClient() as any;
   let query = supabase
     .from("projects")
     .select(
@@ -132,7 +132,7 @@ export async function getProjects({
       committee:committees(name, slug),
       images:project_images(image_url, caption, is_primary, sort_order),
       team:project_team(
-        member:members(id, profile:profiles(first_name, last_name, avatar_url)),
+        member:members(id, user_id),
         role_in_project
       )
     `,
@@ -147,7 +147,20 @@ export async function getProjects({
   if (limit) query = query.range(offset, offset + limit - 1);
 
   const { data } = await query;
-  return (data ?? []) as any[];
+  const rows = (data ?? []) as any[];
+
+  // Attach team member profiles manually (members→profiles embed returns null).
+  const userIds = rows.flatMap((p) => (p.team || []).map((t: any) => t.member?.user_id)).filter(Boolean);
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles").select("user_id, first_name, last_name, avatar_url").in("user_id", userIds);
+    const byUser = new Map<string, any>();
+    for (const p of profiles || []) byUser.set(p.user_id, p);
+    for (const proj of rows) {
+      for (const t of proj.team || []) if (t.member) t.member.profile = byUser.get(t.member.user_id) || null;
+    }
+  }
+  return rows;
 }
 
 export async function getProjectBySlug(slug: string) {

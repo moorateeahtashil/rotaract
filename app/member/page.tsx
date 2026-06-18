@@ -52,10 +52,10 @@ export default async function MemberDashboardPage() {
   ] = await Promise.all([
     supabase
       .from("members")
-      .select("*, profile:profiles(first_name, last_name)")
+      .select("*")
       .eq("user_id", guard.userId)
       .is("deleted_at", null)
-      .single(),
+      .maybeSingle(),
     supabase
       .from("announcements")
       .select("id, title, priority, published_at")
@@ -79,7 +79,11 @@ export default async function MemberDashboardPage() {
       .is("deleted_at", null),
   ]);
 
-  const profile = (member as any)?.profile;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("user_id", guard.userId)
+    .maybeSingle();
   const firstName = profile?.first_name || "Member";
 
   const prospective = isProspectiveOnly(guard.roles as string[]);

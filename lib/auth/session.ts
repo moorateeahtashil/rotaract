@@ -53,17 +53,21 @@ export async function getCurrentMember() {
 
   const { data: member } = await supabase
     .from("members")
-    .select(
-      `
-      *,
-      profile:profiles(*)
-    `
-    )
+    .select("*")
     .eq("user_id", session.user.id)
     .is("deleted_at", null)
-    .single();
+    .maybeSingle();
 
-  return member;
+  if (!member) return null;
+
+  // Attach profile manually (members→profiles embed returns null).
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  return { ...member, profile: profile ?? null };
 }
 
 export async function getUserRoles(userId: string): Promise<UserRole[]> {

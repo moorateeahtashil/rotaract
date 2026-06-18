@@ -70,10 +70,7 @@ export default function AdminCommitteesPage() {
         .from("committees")
         .select(`
           id, name, slug, description, chair_member_id, is_active,
-          chair:members!chair_member_id(
-            id,
-            profile:profiles(first_name, last_name)
-          )
+          chair:members!chair_member_id(id, user_id)
         `)
         .is("deleted_at", null)
         .order("name"),
@@ -84,21 +81,32 @@ export default function AdminCommitteesPage() {
           member_id,
           custom_title,
           position:board_positions(title),
-          member:members(
-            id,
-            profile:profiles(first_name, last_name)
-          )
+          member:members(id, user_id)
         `)
         .is("deleted_at", null)
         .eq("is_visible", true),
     ]);
 
+    // Manual join: members.user_id → profiles (PostgREST embed returns null).
+    const userIds = [
+      ...(committeesData || []).map((c: any) => c.chair?.user_id),
+      ...(boardData || []).map((b: any) => b.member?.user_id),
+    ].filter(Boolean);
+    const profByUser = new Map<string, any>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles").select("user_id, first_name, last_name").in("user_id", userIds);
+      for (const p of profiles || []) profByUser.set(p.user_id, p);
+    }
+    const nameOf = (userId?: string) => {
+      const p = userId ? profByUser.get(userId) : null;
+      return p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : null;
+    };
+
     setCommittees(
       (committeesData || []).map((c: any) => ({
         ...c,
-        chair_name: c.chair?.profile
-          ? `${c.chair.profile.first_name} ${c.chair.profile.last_name}`
-          : undefined,
+        chair_name: nameOf(c.chair?.user_id) || undefined,
       }))
     );
 
@@ -111,12 +119,14 @@ export default function AdminCommitteesPage() {
           seen.add(b.member_id);
           return true;
         })
-        .map((b: any) => ({
-          member_id: b.member_id,
-          name: b.member?.profile
-            ? `${b.member.profile.first_name} ${b.member.profile.last_name} — ${b.custom_title || b.position?.title || "Board Member"}`
-            : b.member_id,
-        }))
+        .map((b: any) => {
+          const name = nameOf(b.member?.user_id);
+          const title = b.custom_title || b.position?.title || "Board Member";
+          return {
+            member_id: b.member_id,
+            name: name ? `${name} — ${title}` : `${title}`,
+          };
+        })
     );
 
     setLoading(false);
