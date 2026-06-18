@@ -78,25 +78,25 @@ async function MembersGrid({ searchParams }: { searchParams: Promise<{ q?: strin
                     <img src={FAVICON_URL} alt="" className="h-10 w-10 object-contain" />
                   </div>
                 )}
-                <h3 className="font-semibold text-charcoal">{name}</h3>
+                <h3 className="font-semibold text-charcoal text-base">{name}</h3>
                 {member.board_position && (
-                  <Badge className="bg-rotary-gold/15 text-rotary-gold border-rotary-gold/30 text-xs mt-1">
-                    {member.board_position}
-                  </Badge>
+                  <p className="text-sm font-medium text-rotary-blue mt-1">{member.board_position}</p>
                 )}
                 {member.classification && (
-                  <p className="text-xs text-pewter mt-1">{member.classification}</p>
+                  <p className="text-xs text-pewter mt-1.5">{member.classification}</p>
                 )}
                 {profile?.occupation && (
-                  <div className="flex items-center justify-center gap-1 mt-2 text-xs text-pewter">
-                    <Briefcase className="h-3 w-3" />
-                    {profile.occupation}
+                  <div className="flex items-center justify-center gap-1.5 mt-1.5 text-xs text-pewter">
+                    <Briefcase className="h-3 w-3 flex-shrink-0" />
+                    <span>{profile.occupation}</span>
                   </div>
                 )}
                 {member.join_date && (
-                  <Badge variant="outline" className="text-xs mt-2">
-                    Member since {new Date(member.join_date).getFullYear()}
-                  </Badge>
+                  <div className="mt-4 pt-3 border-t border-border">
+                    <Badge variant="outline" className="text-xs">
+                      Member since {new Date(member.join_date).getFullYear()}
+                    </Badge>
+                  </div>
                 )}
               </CardContent>
             </Card>

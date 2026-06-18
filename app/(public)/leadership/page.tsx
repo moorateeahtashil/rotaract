@@ -85,28 +85,32 @@ export default async function LeadershipPage() {
                               </AvatarFallback>
                             </Avatar>
                             <h3 className="font-semibold text-lg text-charcoal">
-                              {profile ? `${profile.first_name} ${profile.last_name}` : "Unknown"}
+                              {profile ? `${profile.first_name} ${profile.last_name}`.trim() : "Board Member"}
                             </h3>
-                            <p className="text-sm text-rotary-blue font-medium mb-1">
+                            <p className="text-sm text-rotary-blue font-medium mt-1">
                               {bm.custom_title || position.title}
                             </p>
                             {profile?.occupation && (
-                              <p className="text-xs text-pewter mb-2">{profile.occupation}</p>
+                              <p className="text-xs text-pewter mt-1.5">{profile.occupation}</p>
                             )}
-                            {bm.term_start && (
-                              <Badge variant="outline" className="text-xs">
-                                Term: {new Date(bm.term_start).getFullYear()}
-                                {bm.term_end ? ` – ${new Date(bm.term_end).getFullYear()}` : " – Present"}
-                              </Badge>
-                            )}
-                            {profile?.email && (
-                              <a
-                                href={`mailto:${profile.email}`}
-                                className="inline-flex items-center gap-1 text-sm text-rotary-blue hover:underline mt-3"
-                              >
-                                <Mail className="h-3.5 w-3.5" />
-                                Contact
-                              </a>
+                            {(bm.term_start || profile?.email) && (
+                              <div className="mt-4 pt-3 border-t border-border flex flex-col items-center gap-2">
+                                {bm.term_start && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Term: {new Date(bm.term_start).getFullYear()}
+                                    {bm.term_end ? ` – ${new Date(bm.term_end).getFullYear()}` : " – Present"}
+                                  </Badge>
+                                )}
+                                {profile?.email && (
+                                  <a
+                                    href={`mailto:${profile.email}`}
+                                    className="inline-flex items-center gap-1 text-sm text-rotary-blue hover:underline"
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                    Contact
+                                  </a>
+                                )}
+                              </div>
                             )}
                           </CardContent>
                         </Card>

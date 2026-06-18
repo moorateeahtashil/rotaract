@@ -80,6 +80,9 @@ export default function AdminBoardPage() {
     is_visible: true,
   });
   const [saving, setSaving] = useState(false);
+  const [posDialogOpen, setPosDialogOpen] = useState(false);
+  const [newPosition, setNewPosition] = useState("");
+  const [savingPos, setSavingPos] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -214,6 +217,42 @@ export default function AdminBoardPage() {
     return p ? `${p.first_name} ${p.last_name}` : option.id;
   }
 
+  // ─── Manage positions ───
+  async function addPosition() {
+    const title = newPosition.trim();
+    if (!title) return;
+    setSavingPos(true);
+    try {
+      const key = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const { error } = await supabase.from("board_positions").insert({
+        title,
+        position_key: `${key}-${Date.now().toString(36)}`,
+        sort_order: positions.length + 1,
+        is_active: true,
+      });
+      if (error) throw error;
+      toast({ variant: "success", title: "Position added" });
+      setNewPosition("");
+      load();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setSavingPos(false);
+    }
+  }
+
+  async function removePosition(p: BoardPosition) {
+    const inUse = boardMembers.some((bm) => bm.position_id === p.id);
+    if (inUse) {
+      toast({ variant: "destructive", title: "Position in use", description: "Remove board members in this position first." });
+      return;
+    }
+    if (!confirm(`Remove the "${p.title}" position?`)) return;
+    const { error } = await supabase.from("board_positions").update({ is_active: false }).eq("id", p.id);
+    if (error) toast({ variant: "destructive", title: "Error", description: error.message });
+    else { toast({ variant: "success", title: "Position removed" }); load(); }
+  }
+
   if (loading) {
     return <div className="text-pewter text-sm">Loading...</div>;
   }
@@ -225,9 +264,14 @@ export default function AdminBoardPage() {
           <h1 className="text-2xl font-bold text-charcoal">Board Members</h1>
           <p className="text-sm text-pewter mt-1">Manage board positions and current term members.</p>
         </div>
-        <Button onClick={openAdd} className="bg-rotary-blue hover:bg-rotary-blue/90">
-          <Plus className="mr-2 h-4 w-4" /> Add Board Member
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setPosDialogOpen(true)}>
+            <Shield className="mr-2 h-4 w-4" /> Manage Positions
+          </Button>
+          <Button onClick={openAdd} className="bg-rotary-blue hover:bg-rotary-blue/90">
+            <Plus className="mr-2 h-4 w-4" /> Add Board Member
+          </Button>
+        </div>
       </div>
 
       {boardMembers.length === 0 ? (
@@ -363,6 +407,43 @@ export default function AdminBoardPage() {
               </Button>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Positions */}
+      <Dialog open={posDialogOpen} onOpenChange={setPosDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Positions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="New position title (e.g. Treasurer)"
+                value={newPosition}
+                onChange={(e) => setNewPosition(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPosition(); } }}
+              />
+              <Button onClick={addPosition} disabled={savingPos || !newPosition.trim()} className="bg-rotary-blue hover:bg-rotary-blue/90">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {positions.length === 0 ? (
+              <p className="text-sm text-pewter text-center py-4">No positions yet. Add the first one above.</p>
+            ) : (
+              <div className="space-y-1 max-h-80 overflow-y-auto">
+                {positions.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                    <span className="text-sm text-charcoal">{p.title}</span>
+                    <Button size="sm" variant="ghost" className="text-cranberry hover:bg-cranberry/5" onClick={() => removePosition(p)} title="Remove">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-pewter">Removing a position hides it from the dropdown. You can&apos;t remove a position that currently has a board member assigned.</p>
           </div>
         </DialogContent>
       </Dialog>
