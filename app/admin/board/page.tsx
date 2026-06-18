@@ -86,14 +86,7 @@ export default function AdminBoardPage() {
     const [{ data: bm }, { data: pos }, { data: members }] = await Promise.all([
       supabase
         .from("board_members")
-        .select(`
-          *,
-          position:board_positions(*),
-          member:members(
-            id,
-            profile:profiles(first_name, last_name, email, avatar_url)
-          )
-        `)
+        .select(`*, position:board_positions(*), member:members(id, user_id)`)
         .is("deleted_at", null)
         .order("sort_order"),
       supabase
@@ -103,13 +96,32 @@ export default function AdminBoardPage() {
         .order("sort_order"),
       supabase
         .from("members")
-        .select("id, profile:profiles(first_name, last_name, email)")
+        .select("id, user_id")
         .eq("status", "active")
         .is("deleted_at", null),
     ]);
-    setBoardMembers(bm || []);
+
+    // Manual join: members.user_id → profiles (the PostgREST embed doesn't resolve).
+    const bmRows = bm || [];
+    const memRows = members || [];
+    const userIds = [
+      ...bmRows.map((b: any) => b.member?.user_id),
+      ...memRows.map((m: any) => m.user_id),
+    ].filter(Boolean);
+    const profByUser = new Map<string, any>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name, email, avatar_url")
+        .in("user_id", userIds);
+      for (const p of profiles || []) profByUser.set(p.user_id, p);
+    }
+    for (const b of bmRows) if (b.member) b.member.profile = profByUser.get(b.member.user_id) || null;
+    const memWithProfiles = memRows.map((m: any) => ({ ...m, profile: profByUser.get(m.user_id) || null }));
+
+    setBoardMembers(bmRows);
     setPositions(pos || []);
-    setMemberOptions(members || []);
+    setMemberOptions(memWithProfiles);
     setLoading(false);
   }, [supabase]);
 
